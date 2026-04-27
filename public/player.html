@@ -1,113 +1,162 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Player Booking</title>
+  <title>PickleSpotPH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
-      font-family: Arial;
-      background: #f4f6f9;
       margin: 0;
-      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      background: #f4f6f9;
     }
 
-    .container {
+    .app {
       max-width: 420px;
       margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
+      background: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
-    h2 {
+    .header {
+      background: #3498db;
+      color: white;
+      padding: 16px;
       text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .content {
+      padding: 16px;
+      flex: 1;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
     }
 
     label {
       font-size: 13px;
-      margin-top: 10px;
+      color: #555;
       display: block;
+      margin-bottom: 6px;
     }
 
     input, select {
       width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
     }
 
     .slots {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 15px;
+      gap: 10px;
+      margin-top: 10px;
     }
 
     .slot {
-      padding: 10px;
+      padding: 12px;
       text-align: center;
-      border-radius: 6px;
-      cursor: pointer;
+      border-radius: 10px;
       background: #ecf0f1;
       font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .slot:hover {
+      transform: scale(1.03);
     }
 
     .slot.selected {
       background: #3498db;
       color: white;
+      font-weight: bold;
     }
 
     .slot.disabled {
-      background: #bdc3c7;
-      color: #777;
+      background: #dcdde1;
+      color: #888;
       pointer-events: none;
     }
 
-    button {
+    .footer {
+      padding: 15px;
+      background: white;
+      border-top: 1px solid #eee;
+    }
+
+    .book-btn {
       width: 100%;
-      margin-top: 15px;
-      padding: 12px;
+      padding: 14px;
       border: none;
+      border-radius: 12px;
       background: #3498db;
       color: white;
-      border-radius: 8px;
-      font-size: 15px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .book-btn:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="app">
 
-  <h2>Book a Court</h2>
+  <div class="header">
+    PickleSpotPH
+  </div>
 
-  <label>Your Name</label>
-  <input id="name">
+  <div class="content">
 
-  <label>Select Date</label>
-  <input type="date" id="date" onchange="loadSlots()">
+    <div class="card">
+      <label>Your Name</label>
+      <input id="name" placeholder="Enter your name">
 
-  <label>Duration</label>
-  <select id="duration">
-    <option value="1">1 Hour</option>
-    <option value="2">2 Hours</option>
-    <option value="3">3 Hours</option>
-  </select>
+      <label>Select Date</label>
+      <input type="date" id="date" onchange="loadSlots()">
 
-  <label>Available Time Slots</label>
-  <div id="slots" class="slots"></div>
+      <label>Duration</label>
+      <select id="duration">
+        <option value="1">1 Hour</option>
+        <option value="2">2 Hours</option>
+        <option value="3">3 Hours</option>
+      </select>
+    </div>
 
-  <button onclick="book()">Book Court</button>
+    <div class="card">
+      <label>Available Time Slots</label>
+      <div id="slots" class="slots"></div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <button class="book-btn" onclick="book()">Book Court</button>
+  </div>
 
 </div>
 
 <script>
 let selectedTime = "";
 
-// GENERATE TIME SLOTS
 const times = [
   "8:00 AM","9:00 AM","10:00 AM",
   "11:00 AM","12:00 PM","1:00 PM",
@@ -115,7 +164,6 @@ const times = [
   "5:00 PM","6:00 PM","7:00 PM"
 ];
 
-// LOAD AVAILABLE SLOTS
 async function loadSlots() {
   const date = document.getElementById("date").value;
   if (!date) return;
@@ -147,14 +195,12 @@ async function loadSlots() {
   });
 }
 
-// SELECT SLOT
 function selectSlot(el, time) {
   document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
   el.classList.add("selected");
   selectedTime = time;
 }
 
-// BOOK
 async function book() {
   const name = document.getElementById("name").value;
   const date = document.getElementById("date").value;
