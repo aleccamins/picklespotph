@@ -34,6 +34,14 @@
       padding: 15px;
     }
 
+    select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+    }
+
     .card {
       background: white;
       padding: 15px;
@@ -77,39 +85,62 @@
 </header>
 
 <div class="container">
+
+  <select id="court" onchange="loadBookings()"></select>
+
   <div id="bookings"></div>
+
 </div>
 
 <script>
 let lastCount = 0;
+
+// LOAD COURTS
+async function loadCourts() {
+  const res = await fetch("/courts");
+  const courts = await res.json();
+
+  const select = document.getElementById("court");
+  select.innerHTML = "";
+
+  courts.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.innerText = c.name;
+    select.appendChild(opt);
+  });
+
+  loadBookings();
+}
 
 // LOAD BOOKINGS
 async function loadBookings() {
   const res = await fetch("/bookings");
   const data = await res.json();
 
+  const selectedCourt = document.getElementById("court").value;
+
+  const filtered = data.filter(b => b.courtName === selectedCourt);
+
   const container = document.getElementById("bookings");
   container.innerHTML = "";
 
-  if (data.length === 0) {
-    container.innerHTML = "<p>No bookings yet</p>";
+  if (filtered.length === 0) {
+    container.innerHTML = "<p>No bookings for this court</p>";
     document.getElementById("notif").innerText = 0;
     return;
   }
 
-  // 🔔 COUNT PENDING
-  const pending = data.filter(b => b.status === "Pending").length;
+  const pending = filtered.filter(b => b.status === "Pending").length;
   document.getElementById("notif").innerText = pending;
 
-  // 🔔 ALERT IF NEW
   if (pending > lastCount) {
-    alert("🔔 New booking received!");
+    alert("🔔 New booking for this court!");
   }
 
   lastCount = pending;
 
-  // DISPLAY BOOKINGS
-  data.forEach(b => {
+  filtered.forEach(b => {
     const div = document.createElement("div");
     div.className = "card";
 
@@ -145,8 +176,8 @@ async function reject(id) {
 // AUTO REFRESH
 setInterval(loadBookings, 5000);
 
-// INITIAL LOAD
-loadBookings();
+// INIT
+loadCourts();
 </script>
 
 </body>
