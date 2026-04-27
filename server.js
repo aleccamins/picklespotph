@@ -61,7 +61,7 @@ function isOverlapping(newB, existingB) {
   return newStart < oldEnd && newEnd > oldStart;
 }
 
-// 🔐 ADMIN LOGIN
+// ADMIN LOGIN
 app.post("/admin-login", (req, res) => {
   const { username, password } = req.body;
 
@@ -170,8 +170,9 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-app.get("/admin.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
+// 🔐 HIDDEN ADMIN ROUTE
+app.get("/secure-admin-portal-92xk.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "secure-admin-portal-92xk.html"));
 });
 
 app.get("/admin-login.html", (req, res) => {
