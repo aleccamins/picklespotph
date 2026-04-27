@@ -103,6 +103,13 @@
 </div>
 
 <script>
+// 🔐 ADMIN PROTECTION (AUTO REDIRECT IF NOT LOGGED IN)
+if (!localStorage.getItem("admin")) {
+  alert("Access denied");
+  window.location.href = "admin-login.html";
+}
+
+// LOAD COURTS
 async function loadCourts() {
   const res = await fetch("/courts");
   const courts = await res.json();
@@ -118,6 +125,7 @@ async function loadCourts() {
   });
 }
 
+// ADD COURT
 async function addCourt() {
   const name = document.getElementById("courtName").value;
 
@@ -137,6 +145,7 @@ async function addCourt() {
   loadCourts();
 }
 
+// ADD OWNER
 async function addOwner() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -159,6 +168,7 @@ async function addOwner() {
   document.getElementById("password").value = "";
 }
 
+// INIT
 loadCourts();
 </script>
 
