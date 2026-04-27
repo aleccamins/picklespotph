@@ -5,102 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f4f6f9;
-    }
+    body { margin:0; font-family:Arial; background:#f4f6f9; }
 
-    .app {
-      max-width: 420px;
-      margin: auto;
-      background: #fff;
-      min-height: 100vh;
-    }
+    .app { max-width:420px; margin:auto; background:#fff; }
 
-    .header {
-      background: #3498db;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-weight: bold;
-    }
+    .header { background:#3498db; color:white; padding:15px; text-align:center; }
 
-    .content {
-      padding: 15px;
-    }
+    .content { padding:15px; }
 
     .card {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+      background:white;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:15px;
+      box-shadow:0 5px 15px rgba(0,0,0,0.05);
     }
 
-    label {
-      font-size: 13px;
-      display: block;
-      margin-bottom: 5px;
-    }
+    label { font-size:13px; margin-bottom:5px; display:block; }
 
     input, select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      margin-bottom: 10px;
+      width:100%;
+      padding:10px;
+      border-radius:6px;
+      border:1px solid #ccc;
+      margin-bottom:10px;
     }
 
-    .slots {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
+    .price {
+      font-size:18px;
+      font-weight:bold;
+      color:#2ecc71;
+      margin-top:5px;
     }
 
-    .slot {
-      padding: 10px;
-      text-align: center;
-      background: #ecf0f1;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .slot.selected {
-      background: #3498db;
-      color: white;
-    }
-
-    .slot.disabled {
-      background: #ccc;
-      pointer-events: none;
-    }
-
-    .payment-box {
-      background: #eafaf1;
-      border: 1px solid #2ecc71;
-    }
-
-    .gcash-number {
-      font-size: 18px;
-      font-weight: bold;
-      color: #27ae60;
-      margin: 5px 0;
-    }
-
-    .footer {
-      padding: 15px;
-    }
+    .footer { padding:15px; }
 
     button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #3498db;
-      color: white;
-      font-size: 15px;
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      background:#3498db;
+      color:white;
     }
   </style>
 </head>
@@ -109,103 +55,57 @@
 
 <div class="app">
 
-  <div class="header">Book a Court</div>
+<div class="header">Book Court</div>
 
-  <div class="content">
+<div class="content">
 
-    <div class="card">
-      <label>Your Name</label>
-      <input id="name">
+  <div class="card">
+    <label>Name</label>
+    <input id="name">
 
-      <label>Select Date</label>
-      <input type="date" id="date" onchange="loadSlots()">
+    <label>Date</label>
+    <input type="date" id="date">
 
-      <label>Duration</label>
-      <select id="duration">
-        <option value="1">1 Hour</option>
-        <option value="2">2 Hours</option>
-        <option value="3">3 Hours</option>
-      </select>
-    </div>
+    <label>Time</label>
+    <input id="time" placeholder="e.g. 5:00 PM">
 
-    <div class="card">
-      <label>Select Time</label>
-      <div id="slots" class="slots"></div>
-    </div>
+    <label>Duration</label>
+    <select id="duration" onchange="calcPrice()">
+      <option value="1">1 Hour</option>
+      <option value="2">2 Hours</option>
+      <option value="3">3 Hours</option>
+    </select>
 
-    <!-- 💰 PAYMENT SECTION -->
-    <div class="card payment-box">
-      <label>Payment Instructions</label>
-
-      <div>Send payment via GCash to:</div>
-      <div class="gcash-number">0912 345 6789</div>
-
-      <div style="font-size:12px;margin-top:5px;">
-        Name: PickleSpotPH<br>
-        Amount: ₱100/hour<br><br>
-        After payment, upload your screenshot below.
-      </div>
-
-      <input type="file" id="proof">
-    </div>
-
+    <div class="price" id="price">₱100</div>
   </div>
 
-  <div class="footer">
-    <button onclick="book()">Submit Booking</button>
+  <div class="card">
+    <label>GCash Payment</label>
+    <b>0912 345 6789</b><br>
+    Name: PickleSpotPH<br><br>
+
+    <input type="file" id="proof">
   </div>
 
 </div>
 
+<div class="footer">
+  <button onclick="book()">Submit Booking</button>
+</div>
+
+</div>
+
 <script>
-let selectedTime = "";
+const RATE = 100;
 
-const times = [
-  "8:00 AM","9:00 AM","10:00 AM",
-  "11:00 AM","12:00 PM","1:00 PM",
-  "2:00 PM","3:00 PM","4:00 PM",
-  "5:00 PM","6:00 PM","7:00 PM"
-];
-
-async function loadSlots() {
-  const date = document.getElementById("date").value;
-  if (!date) return;
-
-  const res = await fetch("/bookings");
-  const bookings = await res.json();
-
-  const container = document.getElementById("slots");
-  container.innerHTML = "";
-
-  times.forEach(time => {
-    const div = document.createElement("div");
-    div.className = "slot";
-    div.innerText = time;
-
-    const taken = bookings.find(b =>
-      b.date === date &&
-      b.time === time &&
-      b.status !== "Rejected"
-    );
-
-    if (taken) {
-      div.classList.add("disabled");
-    } else {
-      div.onclick = () => selectSlot(div, time);
-    }
-
-    container.appendChild(div);
-  });
-}
-
-function selectSlot(el, time) {
-  document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
-  el.classList.add("selected");
-  selectedTime = time;
+function calcPrice() {
+  const duration = document.getElementById("duration").value;
+  const total = duration * RATE;
+  document.getElementById("price").innerText = "₱" + total;
 }
 
 async function toBase64(file) {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.readAsDataURL(file);
@@ -215,31 +115,37 @@ async function toBase64(file) {
 async function book() {
   const name = document.getElementById("name").value;
   const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
   const duration = document.getElementById("duration").value;
   const file = document.getElementById("proof").files[0];
 
-  if (!name || !date || !selectedTime || !file) {
-    alert("Complete all fields and upload payment proof");
+  if (!name || !date || !time || !file) {
+    alert("Complete all fields");
     return;
   }
 
+  const total = duration * RATE;
   const proof = await toBase64(file);
+
+  // SAVE RECEIPT DATA
+  localStorage.setItem("receipt", JSON.stringify({
+    name, date, time, duration, total
+  }));
 
   await fetch("/book", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
-      courtName: "Default Court",
-      user: name,
+      courtName:"Default Court",
+      user:name,
       date,
-      time: selectedTime,
+      time,
       duration,
       proof
     })
   });
 
-  alert("Booking submitted with payment ✅");
-  location.reload();
+  window.location.href = "receipt.html";
 }
 </script>
 
