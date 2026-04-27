@@ -5,154 +5,54 @@ const fs = require("fs");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 
 app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
-// 🔐 SIMPLE TOKEN (change this later)
-const ADMIN_TOKEN = "secure123token";
+// INIT
+if (!fs.existsSync(DATA_FILE)) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify({ bookings: [] }));
+}
 
-// READ
 function readData() {
   return JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
-// WRITE
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// INIT
-if (!fs.existsSync(DATA_FILE)) {
-  writeData({ bookings: [], courts: [], owners: [] });
-}
-
-// TIME
-function timeToMinutes(timeStr) {
-  let [time, mod] = timeStr.split(" ");
-  let [h, m] = time.split(":");
-
-  h = parseInt(h);
-  m = parseInt(m);
-
-  if (mod === "PM" && h !== 12) h += 12;
-  if (mod === "AM" && h === 12) h = 0;
-
-  return h * 60 + m;
-}
-
-// OVERLAP
-function isOverlapping(newB, existingB) {
-  if (newB.date !== existingB.date) return false;
-  if (newB.courtName !== existingB.courtName) return false;
-
-  const newStart = timeToMinutes(newB.time);
-  const newEnd = newStart + (parseInt(newB.duration) * 60);
-
-  const oldStart = timeToMinutes(existingB.time);
-  const oldEnd = oldStart + (parseInt(existingB.duration || 1) * 60);
-
-  return newStart < oldEnd && newEnd > oldStart;
-}
-
-// 🔐 ADMIN LOGIN
-app.post("/admin-login", (req, res) => {
-  const { username, password } = req.body;
-
-  if (username === "admin" && password === "admin123") {
-    return res.json({ success: true, token: ADMIN_TOKEN });
-  }
-
-  res.json({ success: false });
-});
-
-// 🔐 AUTH CHECK
-function checkAdmin(req, res, next) {
-  const token = req.headers["x-admin-token"];
-
-  if (token !== ADMIN_TOKEN) {
-    return res.status(403).send("Unauthorized ❌");
-  }
-
-  next();
-}
-
-// OWNER LOGIN
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  const data = readData();
-
-  const owner = data.owners.find(
-    o => o.username === username && o.password === password
-  );
-
-  if (!owner) return res.send("Invalid ❌");
-
-  res.json(owner);
-});
-
-// 🔐 ADD COURT (PROTECTED)
-app.post("/add-court", checkAdmin, (req, res) => {
-  const { name } = req.body;
-  let data = readData();
-
-  data.courts.push({ name });
-  writeData(data);
-
-  res.send("Court added ✅");
-});
-
-// 🔐 ADD OWNER (PROTECTED)
-app.post("/add-owner", checkAdmin, (req, res) => {
-  const { username, password, court } = req.body;
-  let data = readData();
-
-  data.owners.push({ username, password, court });
-  writeData(data);
-
-  res.send("Owner added ✅");
-});
-
-// GET COURTS
-app.get("/courts", (req, res) => {
-  const data = readData();
-  res.json(data.courts);
-});
-
-// BOOKINGS
-app.get("/bookings", (req, res) => {
-  const data = readData();
-  res.json(data.bookings);
-});
-
-// BOOK
+// BOOK WITH PAYMENT PROOF
 app.post("/book", (req, res) => {
-  const { courtName, user, date, time, duration } = req.body;
+  const { courtName, user, date, time, duration, proof } = req.body;
 
   let data = readData();
 
-  const newBooking = {
+  data.bookings.push({
     id: Date.now().toString(),
     courtName,
     user,
     date,
     time,
     duration,
+    proof, // 🔥 STORE IMAGE
     status: "Pending"
-  };
+  });
 
-  const conflict = data.bookings.find(b => isOverlapping(newBooking, b));
-  if (conflict) return res.send("Time slot overlaps ❌");
-
-  data.bookings.push(newBooking);
   writeData(data);
 
-  res.send("Booking created ✅");
+  res.send("Booking submitted with payment proof ✅");
 });
 
-// APPROVE
+// GET BOOKINGS
+app.get("/bookings", (req, res) => {
+  const data = readData();
+  res.json(data.bookings);
+});
+
+// APPROVE / REJECT
 app.post("/approve/:id", (req, res) => {
   let data = readData();
   data.bookings = data.bookings.map(b =>
@@ -162,7 +62,6 @@ app.post("/approve/:id", (req, res) => {
   res.send("Approved");
 });
 
-// REJECT
 app.post("/reject/:id", (req, res) => {
   let data = readData();
   data.bookings = data.bookings.map(b =>
@@ -175,14 +74,6 @@ app.post("/reject/:id", (req, res) => {
 // ROUTES
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-app.get("/secure-admin-portal-92xk.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "secure-admin-portal-92xk.html"));
-});
-
-app.get("/admin-login.html", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin-login.html"));
 });
 
 const PORT = process.env.PORT || 5000;
