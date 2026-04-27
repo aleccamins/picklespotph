@@ -11,17 +11,17 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
-// READ
+// READ DATA
 function readData() {
   return JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
-// WRITE
+// WRITE DATA
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// INIT DATA IF EMPTY
+// INIT DATA FILE
 function initData() {
   if (!fs.existsSync(DATA_FILE)) {
     writeData({
@@ -33,7 +33,7 @@ function initData() {
 }
 initData();
 
-// TIME
+// TIME CONVERSION
 function timeToMinutes(timeStr) {
   let [time, mod] = timeStr.split(" ");
   let [h, m] = time.split(":");
@@ -47,7 +47,7 @@ function timeToMinutes(timeStr) {
   return h * 60 + m;
 }
 
-// OVERLAP
+// OVERLAP CHECK
 function isOverlapping(newB, existingB) {
   if (newB.date !== existingB.date) return false;
   if (newB.courtName !== existingB.courtName) return false;
@@ -77,7 +77,9 @@ app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const data = readData();
 
-  const owner = data.owners.find(o => o.username === username && o.password === password);
+  const owner = data.owners.find(
+    o => o.username === username && o.password === password
+  );
 
   if (!owner) return res.send("Invalid ❌");
 
@@ -118,7 +120,7 @@ app.get("/bookings", (req, res) => {
   res.json(data.bookings);
 });
 
-// BOOK
+// CREATE BOOKING
 app.post("/book", (req, res) => {
   const { courtName, user, date, time, duration } = req.body;
 
@@ -135,7 +137,10 @@ app.post("/book", (req, res) => {
   };
 
   const conflict = data.bookings.find(b => isOverlapping(newBooking, b));
-  if (conflict) return res.send("Time slot overlaps ❌");
+
+  if (conflict) {
+    return res.send("Time slot overlaps ❌");
+  }
 
   data.bookings.push(newBooking);
   writeData(data);
@@ -163,9 +168,14 @@ app.post("/reject/:id", (req, res) => {
   res.send("Rejected");
 });
 
-// HOME
+// HOME PAGE
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
+// ✅ ADMIN PAGE FIX
+app.get("/admin.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
 });
 
 const PORT = process.env.PORT || 5000;
