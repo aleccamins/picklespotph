@@ -88,7 +88,7 @@
 
 <div class="container">
 
-  <!-- 🔐 LOGOUT BUTTON -->
+  <!-- LOGOUT -->
   <button class="logout" onclick="logout()">Logout</button>
 
   <div class="section">
@@ -121,14 +121,16 @@
 
 <script>
 // 🔐 PROTECT PAGE
-if (!localStorage.getItem("admin")) {
+const token = localStorage.getItem("adminToken");
+
+if (!token) {
   alert("Access denied");
   window.location.href = "admin-login.html";
 }
 
-// 🔓 LOGOUT FUNCTION
+// LOGOUT
 function logout() {
-  localStorage.removeItem("admin");
+  localStorage.removeItem("adminToken");
   window.location.href = "admin-login.html";
 }
 
@@ -148,7 +150,7 @@ async function loadCourts() {
   });
 }
 
-// ADD COURT
+// 🔐 ADD COURT (WITH TOKEN)
 async function addCourt() {
   const name = document.getElementById("courtName").value;
 
@@ -157,18 +159,23 @@ async function addCourt() {
     return;
   }
 
-  await fetch("/add-court", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
+  const res = await fetch("/add-court", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": token
+    },
     body: JSON.stringify({ name })
   });
 
-  alert("Court added ✅");
+  const msg = await res.text();
+  alert(msg);
+
   document.getElementById("courtName").value = "";
   loadCourts();
 }
 
-// ADD OWNER
+// 🔐 ADD OWNER (WITH TOKEN)
 async function addOwner() {
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
@@ -179,13 +186,17 @@ async function addOwner() {
     return;
   }
 
-  await fetch("/add-owner", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
+  const res = await fetch("/add-owner", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-admin-token": token
+    },
     body: JSON.stringify({ username, password, court })
   });
 
-  alert("Owner added ✅");
+  const msg = await res.text();
+  alert(msg);
 
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";

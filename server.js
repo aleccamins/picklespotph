@@ -11,6 +11,9 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
+// 🔐 SIMPLE TOKEN (change this later)
+const ADMIN_TOKEN = "secure123token";
+
 // READ
 function readData() {
   return JSON.parse(fs.readFileSync(DATA_FILE));
@@ -22,16 +25,9 @@ function writeData(data) {
 }
 
 // INIT
-function initData() {
-  if (!fs.existsSync(DATA_FILE)) {
-    writeData({
-      bookings: [],
-      courts: [],
-      owners: []
-    });
-  }
+if (!fs.existsSync(DATA_FILE)) {
+  writeData({ bookings: [], courts: [], owners: [] });
 }
-initData();
 
 // TIME
 function timeToMinutes(timeStr) {
@@ -61,16 +57,27 @@ function isOverlapping(newB, existingB) {
   return newStart < oldEnd && newEnd > oldStart;
 }
 
-// ADMIN LOGIN
+// 🔐 ADMIN LOGIN
 app.post("/admin-login", (req, res) => {
   const { username, password } = req.body;
 
   if (username === "admin" && password === "admin123") {
-    return res.json({ success: true });
+    return res.json({ success: true, token: ADMIN_TOKEN });
   }
 
   res.json({ success: false });
 });
+
+// 🔐 AUTH CHECK
+function checkAdmin(req, res, next) {
+  const token = req.headers["x-admin-token"];
+
+  if (token !== ADMIN_TOKEN) {
+    return res.status(403).send("Unauthorized ❌");
+  }
+
+  next();
+}
 
 // OWNER LOGIN
 app.post("/login", (req, res) => {
@@ -86,8 +93,8 @@ app.post("/login", (req, res) => {
   res.json(owner);
 });
 
-// ADD COURT
-app.post("/add-court", (req, res) => {
+// 🔐 ADD COURT (PROTECTED)
+app.post("/add-court", checkAdmin, (req, res) => {
   const { name } = req.body;
   let data = readData();
 
@@ -97,8 +104,8 @@ app.post("/add-court", (req, res) => {
   res.send("Court added ✅");
 });
 
-// ADD OWNER
-app.post("/add-owner", (req, res) => {
+// 🔐 ADD OWNER (PROTECTED)
+app.post("/add-owner", checkAdmin, (req, res) => {
   const { username, password, court } = req.body;
   let data = readData();
 
@@ -170,7 +177,6 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// 🔐 HIDDEN ADMIN ROUTE
 app.get("/secure-admin-portal-92xk.html", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "secure-admin-portal-92xk.html"));
 });
