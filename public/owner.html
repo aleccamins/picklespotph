@@ -3,6 +3,7 @@
 <head>
   <title>Owner - PickleSpotPH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       font-family: Arial;
@@ -19,23 +20,47 @@
     }
 
     .container {
-      padding: 20px;
+      max-width: 420px;   /* 👈 centered width */
+      margin: 30px auto;
+      padding: 15px;
     }
 
     .card {
       background: white;
       padding: 15px;
-      margin-top: 15px;
+      margin-bottom: 12px;
       border-radius: 10px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    .row {
+      margin-bottom: 6px;
+      font-size: 13px;
+    }
+
+    .label {
+      color: #777;
+      font-size: 12px;
+    }
+
+    .value {
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
     }
 
     button {
-      padding: 8px 12px;
-      margin: 5px;
+      flex: 1;
+      padding: 8px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 13px;
     }
 
     .approve {
@@ -47,8 +72,15 @@
       background: #e74c3c;
       color: white;
     }
+
+    .status {
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: bold;
+    }
   </style>
 </head>
+
 <body>
 
 <header>Owner Dashboard</header>
@@ -57,7 +89,73 @@
   <div id="bookings"></div>
 </div>
 
-<script src="owner.js"></script>
+<script>
+async function loadBookings() {
+  const res = await fetch("/bookings");
+  const data = await res.json();
+
+  const container = document.getElementById("bookings");
+  container.innerHTML = "";
+
+  if (data.length === 0) {
+    container.innerHTML = "<p>No bookings yet</p>";
+    return;
+  }
+
+  data.forEach(b => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <div class="row">
+        <div class="label">Court</div>
+        <div class="value">${b.courtName}</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Player</div>
+        <div class="value">${b.user}</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Date</div>
+        <div class="value">${b.date}</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Time</div>
+        <div class="value">${b.time}</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Duration</div>
+        <div class="value">${b.duration} hour(s)</div>
+      </div>
+
+      <div class="status">Status: ${b.status}</div>
+
+      <div class="actions">
+        <button class="approve" onclick="approve('${b.id}')">Approve</button>
+        <button class="reject" onclick="reject('${b.id}')">Reject</button>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function approve(id) {
+  await fetch(`/approve/${id}`, { method: "POST" });
+  loadBookings();
+}
+
+async function reject(id) {
+  await fetch(`/reject/${id}`, { method: "POST" });
+  loadBookings();
+}
+
+loadBookings();
+</script>
 
 </body>
 </html>
