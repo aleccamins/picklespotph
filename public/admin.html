@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { font-family:Arial; background:#f4f6f9; padding:20px; }
+    .box { max-width:400px; margin:auto; background:white; padding:20px; border-radius:10px; }
+
+    input, select, button {
+      width:100%;
+      padding:10px;
+      margin:5px 0;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+
+    button {
+      background:#3498db;
+      color:white;
+      border:none;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h3>Add Court</h3>
+  <input id="courtName" placeholder="Court name">
+  <button onclick="addCourt()">Add Court</button>
+
+  <hr>
+
+  <h3>Add Owner</h3>
+  <input id="username" placeholder="Username">
+  <input id="password" placeholder="Password">
+  <select id="court"></select>
+  <button onclick="addOwner()">Add Owner</button>
+</div>
+
+<script>
+async function loadCourts() {
+  const res = await fetch("/courts");
+  const courts = await res.json();
+
+  const select = document.getElementById("court");
+  select.innerHTML = "";
+
+  courts.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.innerText = c.name;
+    select.appendChild(opt);
+  });
+}
+
+async function addCourt() {
+  const name = document.getElementById("courtName").value;
+
+  await fetch("/add-court", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ name })
+  });
+
+  alert("Court added");
+  loadCourts();
+}
+
+async function addOwner() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+  const court = document.getElementById("court").value;
+
+  await fetch("/add-owner", {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ username, password, court })
+  });
+
+  alert("Owner added");
+}
+
+loadCourts();
+</script>
+
+</body>
+</html>

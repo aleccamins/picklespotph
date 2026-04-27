@@ -11,20 +11,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
-// COURTS
-const courts = [
-  { name: "Cebu Pickle Court" },
-  { name: "Dumaguete Court 1" },
-  { name: "Dumaguete Court 2" }
-];
-
-// OWNERS (simple login)
-const owners = [
-  { username: "cebu", password: "1234", court: "Cebu Pickle Court" },
-  { username: "duma1", password: "1234", court: "Dumaguete Court 1" },
-  { username: "duma2", password: "1234", court: "Dumaguete Court 2" }
-];
-
 // READ
 function readData() {
   return JSON.parse(fs.readFileSync(DATA_FILE));
@@ -34,6 +20,18 @@ function readData() {
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
+
+// INIT DATA IF EMPTY
+function initData() {
+  if (!fs.existsSync(DATA_FILE)) {
+    writeData({
+      bookings: [],
+      courts: [],
+      owners: []
+    });
+  }
+}
+initData();
 
 // TIME
 function timeToMinutes(timeStr) {
@@ -63,21 +61,58 @@ function isOverlapping(newB, existingB) {
   return newStart < oldEnd && newEnd > oldStart;
 }
 
-// LOGIN
-app.post("/login", (req, res) => {
+// ADMIN LOGIN
+app.post("/admin-login", (req, res) => {
   const { username, password } = req.body;
 
-  const owner = owners.find(o => o.username === username && o.password === password);
+  if (username === "admin" && password === "admin123") {
+    return res.send("OK");
+  }
 
-  if (!owner) return res.send("Invalid login ❌");
+  res.send("Invalid ❌");
+});
+
+// OWNER LOGIN
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+  const data = readData();
+
+  const owner = data.owners.find(o => o.username === username && o.password === password);
+
+  if (!owner) return res.send("Invalid ❌");
 
   res.json(owner);
 });
 
-// COURTS
-app.get("/courts", (req, res) => res.json(courts));
+// ADD COURT
+app.post("/add-court", (req, res) => {
+  const { name } = req.body;
+  let data = readData();
 
-// BOOKINGS
+  data.courts.push({ name });
+  writeData(data);
+
+  res.send("Court added ✅");
+});
+
+// ADD OWNER
+app.post("/add-owner", (req, res) => {
+  const { username, password, court } = req.body;
+  let data = readData();
+
+  data.owners.push({ username, password, court });
+  writeData(data);
+
+  res.send("Owner added ✅");
+});
+
+// GET COURTS
+app.get("/courts", (req, res) => {
+  const data = readData();
+  res.json(data.courts);
+});
+
+// GET BOOKINGS
 app.get("/bookings", (req, res) => {
   const data = readData();
   res.json(data.bookings);
