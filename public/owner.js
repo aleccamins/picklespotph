@@ -1,40 +1,36 @@
-const API = "http://localhost:5000";
-
-// LOAD BOOKINGS
 async function loadBookings() {
-  const res = await fetch(API + "/bookings");
+  const res = await fetch("/bookings");
   const data = await res.json();
 
   const container = document.getElementById("bookings");
   container.innerHTML = "";
 
   data.forEach(b => {
-    container.innerHTML += `
-      <div style="background:white;padding:10px;margin:10px;border-radius:10px;">
-        <p><b>Court:</b> ${b.courtName}</p>
-        <p><b>User:</b> ${b.user}</p>
-        <p><b>Date:</b> ${b.date}</p>
-        <p><b>Time:</b> ${b.time}</p>
-        <p><b>Status:</b> ${b.status}</p>
+    const div = document.createElement("div");
+    div.className = "card";
 
-        <button onclick="approveBooking('${b.id}')">Approve</button>
-        <button onclick="rejectBooking('${b.id}')">Reject</button>
-      </div>
+    div.innerHTML = `
+      <p><b>Court:</b> ${b.courtName}</p>
+      <p><b>User:</b> ${b.user}</p>
+      <p><b>Date:</b> ${b.date}</p>
+      <p><b>Time:</b> ${b.time}</p>
+      <p><b>Status:</b> ${b.status}</p>
+      <button class="approve" onclick="approve('${b.id}')">Approve</button>
+      <button class="reject" onclick="reject('${b.id}')">Reject</button>
     `;
+
+    container.appendChild(div);
   });
 }
 
-// APPROVE
-async function approveBooking(id) {
-  await fetch(API + "/approve/" + id, { method: "POST" });
+async function approve(id) {
+  await fetch(`/approve/${id}`, { method: "POST" });
   loadBookings();
 }
 
-// REJECT
-async function rejectBooking(id) {
-  await fetch(API + "/reject/" + id, { method: "POST" });
+async function reject(id) {
+  await fetch(`/reject/${id}`, { method: "POST" });
   loadBookings();
 }
 
-// INIT
 loadBookings();
