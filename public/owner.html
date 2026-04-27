@@ -1,144 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Owner - PickleSpotPH</title>
+  <title>Owner</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f9;
-      margin: 0;
-    }
-
-    header {
-      background: #2ecc71;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    #notif {
-      background: red;
-      padding: 3px 8px;
-      border-radius: 20px;
-      font-size: 12px;
-      margin-left: 5px;
-    }
+    body { font-family:Arial; background:#f4f6f9; margin:0; }
+    header { background:#2ecc71; color:white; padding:15px; text-align:center; }
 
     .container {
-      max-width: 400px;
-      margin: 30px auto;
-      padding: 15px;
-    }
-
-    select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
+      max-width:400px;
+      margin:30px auto;
+      padding:15px;
     }
 
     .card {
-      background: white;
-      padding: 15px;
-      margin-bottom: 12px;
-      border-radius: 10px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-      font-size: 13px;
-    }
-
-    .actions {
-      margin-top: 10px;
-      display: flex;
-      gap: 10px;
+      background:white;
+      padding:15px;
+      margin-bottom:10px;
+      border-radius:10px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.08);
     }
 
     button {
-      flex: 1;
-      padding: 8px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 13px;
+      width:48%;
+      padding:8px;
+      margin-top:10px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
     }
 
-    .approve {
-      background: #2ecc71;
-      color: white;
-    }
-
-    .reject {
-      background: #e74c3c;
-      color: white;
-    }
+    .approve { background:#2ecc71; color:white; }
+    .reject { background:#e74c3c; color:white; }
   </style>
 </head>
 
 <body>
 
-<header>
-  Owner Dashboard 🔔 <span id="notif">0</span>
-</header>
+<header>Owner Dashboard</header>
 
 <div class="container">
-
-  <select id="court" onchange="loadBookings()"></select>
-
   <div id="bookings"></div>
-
 </div>
 
 <script>
-let lastCount = 0;
+const court = localStorage.getItem("court");
 
-// LOAD COURTS
-async function loadCourts() {
-  const res = await fetch("/courts");
-  const courts = await res.json();
-
-  const select = document.getElementById("court");
-  select.innerHTML = "";
-
-  courts.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.name;
-    opt.innerText = c.name;
-    select.appendChild(opt);
-  });
-
-  loadBookings();
+if (!court) {
+  alert("Please login");
+  window.location.href = "login.html";
 }
 
-// LOAD BOOKINGS
 async function loadBookings() {
   const res = await fetch("/bookings");
   const data = await res.json();
 
-  const selectedCourt = document.getElementById("court").value;
-
-  const filtered = data.filter(b => b.courtName === selectedCourt);
+  const filtered = data.filter(b => b.courtName === court);
 
   const container = document.getElementById("bookings");
   container.innerHTML = "";
 
   if (filtered.length === 0) {
-    container.innerHTML = "<p>No bookings for this court</p>";
-    document.getElementById("notif").innerText = 0;
+    container.innerHTML = "<p>No bookings</p>";
     return;
   }
-
-  const pending = filtered.filter(b => b.status === "Pending").length;
-  document.getElementById("notif").innerText = pending;
-
-  if (pending > lastCount) {
-    alert("🔔 New booking for this court!");
-  }
-
-  lastCount = pending;
 
   filtered.forEach(b => {
     const div = document.createElement("div");
@@ -148,36 +74,29 @@ async function loadBookings() {
       <div><b>${b.user}</b></div>
       <div>${b.date}</div>
       <div>${b.time}</div>
-      <div>${b.duration} hour(s)</div>
+      <div>${b.duration} hr</div>
       <div>Status: ${b.status}</div>
 
-      <div class="actions">
-        <button class="approve" onclick="approve('${b.id}')">Approve</button>
-        <button class="reject" onclick="reject('${b.id}')">Reject</button>
-      </div>
+      <button class="approve" onclick="approve('${b.id}')">Approve</button>
+      <button class="reject" onclick="reject('${b.id}')">Reject</button>
     `;
 
     container.appendChild(div);
   });
 }
 
-// APPROVE
 async function approve(id) {
-  await fetch(`/approve/${id}`, { method: "POST" });
+  await fetch(`/approve/${id}`, { method:"POST" });
   loadBookings();
 }
 
-// REJECT
 async function reject(id) {
-  await fetch(`/reject/${id}`, { method: "POST" });
+  await fetch(`/reject/${id}`, { method:"POST" });
   loadBookings();
 }
 
-// AUTO REFRESH
 setInterval(loadBookings, 5000);
-
-// INIT
-loadCourts();
+loadBookings();
 </script>
 
 </body>

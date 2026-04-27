@@ -11,24 +11,31 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
-// COURTS LIST
+// COURTS
 const courts = [
   { name: "Cebu Pickle Court" },
   { name: "Dumaguete Court 1" },
   { name: "Dumaguete Court 2" }
 ];
 
-// READ DATA
+// OWNERS (simple login)
+const owners = [
+  { username: "cebu", password: "1234", court: "Cebu Pickle Court" },
+  { username: "duma1", password: "1234", court: "Dumaguete Court 1" },
+  { username: "duma2", password: "1234", court: "Dumaguete Court 2" }
+];
+
+// READ
 function readData() {
   return JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
-// WRITE DATA
+// WRITE
 function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// TIME → MINUTES
+// TIME
 function timeToMinutes(timeStr) {
   let [time, mod] = timeStr.split(" ");
   let [h, m] = time.split(":");
@@ -42,7 +49,7 @@ function timeToMinutes(timeStr) {
   return h * 60 + m;
 }
 
-// OVERLAP CHECK
+// OVERLAP
 function isOverlapping(newB, existingB) {
   if (newB.date !== existingB.date) return false;
   if (newB.courtName !== existingB.courtName) return false;
@@ -56,18 +63,27 @@ function isOverlapping(newB, existingB) {
   return newStart < oldEnd && newEnd > oldStart;
 }
 
-// GET COURTS
-app.get("/courts", (req, res) => {
-  res.json(courts);
+// LOGIN
+app.post("/login", (req, res) => {
+  const { username, password } = req.body;
+
+  const owner = owners.find(o => o.username === username && o.password === password);
+
+  if (!owner) return res.send("Invalid login ❌");
+
+  res.json(owner);
 });
 
-// GET BOOKINGS
+// COURTS
+app.get("/courts", (req, res) => res.json(courts));
+
+// BOOKINGS
 app.get("/bookings", (req, res) => {
   const data = readData();
   res.json(data.bookings);
 });
 
-// CREATE BOOKING
+// BOOK
 app.post("/book", (req, res) => {
   const { courtName, user, date, time, duration } = req.body;
 
@@ -84,10 +100,7 @@ app.post("/book", (req, res) => {
   };
 
   const conflict = data.bookings.find(b => isOverlapping(newBooking, b));
-
-  if (conflict) {
-    return res.send("Time slot overlaps ❌");
-  }
+  if (conflict) return res.send("Time slot overlaps ❌");
 
   data.bookings.push(newBooking);
   writeData(data);
