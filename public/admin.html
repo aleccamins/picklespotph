@@ -1,43 +1,105 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Admin</title>
+  <title>Admin Panel</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { font-family:Arial; background:#f4f6f9; padding:20px; }
-    .box { max-width:400px; margin:auto; background:white; padding:20px; border-radius:10px; }
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
 
-    input, select, button {
-      width:100%;
-      padding:10px;
-      margin:5px 0;
-      border-radius:6px;
-      border:1px solid #ccc;
+    .container {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      margin-top: 0;
+      margin-bottom: 15px;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-size: 13px;
+      color: #555;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 12px;
+      font-size: 14px;
+      box-sizing: border-box;
     }
 
     button {
-      background:#3498db;
-      color:white;
-      border:none;
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #3498db;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #eee;
+      margin: 25px 0;
     }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h3>Add Court</h3>
-  <input id="courtName" placeholder="Court name">
-  <button onclick="addCourt()">Add Court</button>
+<div class="container">
+
+  <div class="section">
+    <h2>Add Court</h2>
+
+    <label>Court Name</label>
+    <input id="courtName" placeholder="Enter court name">
+
+    <button onclick="addCourt()">Add Court</button>
+  </div>
 
   <hr>
 
-  <h3>Add Owner</h3>
-  <input id="username" placeholder="Username">
-  <input id="password" placeholder="Password">
-  <select id="court"></select>
-  <button onclick="addOwner()">Add Owner</button>
+  <div class="section">
+    <h2>Add Owner</h2>
+
+    <label>Username</label>
+    <input id="username" placeholder="Enter username">
+
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter password">
+
+    <label>Select Court</label>
+    <select id="court"></select>
+
+    <button onclick="addOwner()">Add Owner</button>
+  </div>
+
 </div>
 
 <script>
@@ -59,13 +121,19 @@ async function loadCourts() {
 async function addCourt() {
   const name = document.getElementById("courtName").value;
 
+  if (!name) {
+    alert("Enter court name");
+    return;
+  }
+
   await fetch("/add-court", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ name })
   });
 
-  alert("Court added");
+  alert("Court added ✅");
+  document.getElementById("courtName").value = "";
   loadCourts();
 }
 
@@ -74,13 +142,21 @@ async function addOwner() {
   const password = document.getElementById("password").value;
   const court = document.getElementById("court").value;
 
+  if (!username || !password) {
+    alert("Fill all fields");
+    return;
+  }
+
   await fetch("/add-owner", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({ username, password, court })
   });
 
-  alert("Owner added");
+  alert("Owner added ✅");
+
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
 }
 
 loadCourts();
