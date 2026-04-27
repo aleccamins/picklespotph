@@ -1,39 +1,40 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const fs = require("fs");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// SAMPLE DATA
-let courts = [
-  {
-    name: "Cebu Pickle Court",
-    location: "Cebu City",
-    image: "https://via.placeholder.com/200"
-  }
-];
+app.use(express.static(path.join(__dirname, "public")));
 
-let bookings = [
-  {
-    id: "1",
-    courtName: "Cebu Pickle Court",
-    user: "Juan",
-    date: "2026-05-01",
-    time: "10:00",
-    status: "Pending"
-  }
-];
+const DATA_FILE = "data.json";
 
-// API ROUTES FIRST
-app.get("/courts", (req, res) => res.json(courts));
-app.get("/bookings", (req, res) => res.json(bookings));
+// READ DATA
+function readData() {
+  const data = fs.readFileSync(DATA_FILE);
+  return JSON.parse(data);
+}
 
+// WRITE DATA
+function writeData(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+}
+
+// GET BOOKINGS
+app.get("/bookings", (req, res) => {
+  const data = readData();
+  res.json(data.bookings);
+});
+
+// CREATE BOOKING
 app.post("/book", (req, res) => {
   const { courtName, user, date, time } = req.body;
 
-  const exists = bookings.find(
+  let data = readData();
+
+  const exists = data.bookings.find(
     b => b.courtName === courtName && b.date === date && b.time === time
   );
 
@@ -50,34 +51,42 @@ app.post("/book", (req, res) => {
     status: "Pending"
   };
 
-  bookings.push(newBooking);
+  data.bookings.push(newBooking);
+  writeData(data);
+
   res.send("Booking created ✅");
 });
 
+// APPROVE
 app.post("/approve/:id", (req, res) => {
-  bookings = bookings.map(b =>
+  let data = readData();
+
+  data.bookings = data.bookings.map(b =>
     b.id === req.params.id ? { ...b, status: "Approved" } : b
   );
+
+  writeData(data);
   res.send("Approved");
 });
 
+// REJECT
 app.post("/reject/:id", (req, res) => {
-  bookings = bookings.map(b =>
+  let data = readData();
+
+  data.bookings = data.bookings.map(b =>
     b.id === req.params.id ? { ...b, status: "Rejected" } : b
   );
+
+  writeData(data);
   res.send("Rejected");
 });
 
-// 🔥 FORCE LOGIN PAGE BEFORE STATIC
+// HOME
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// SERVE STATIC FILES AFTER
-app.use(express.static(path.join(__dirname, "public")));
-
-// START SERVER
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log("Server running on http://localhost:" + PORT);
+  console.log("Server running");
 });
