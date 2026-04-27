@@ -19,6 +19,20 @@
       padding: 25px;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    .logout {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background: #e74c3c;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      color: white;
+      border: none;
     }
 
     h2 {
@@ -74,6 +88,9 @@
 
 <div class="container">
 
+  <!-- 🔐 LOGOUT BUTTON -->
+  <button class="logout" onclick="logout()">Logout</button>
+
   <div class="section">
     <h2>Add Court</h2>
 
@@ -103,9 +120,15 @@
 </div>
 
 <script>
-// 🔐 ADMIN PROTECTION (AUTO REDIRECT IF NOT LOGGED IN)
+// 🔐 PROTECT PAGE
 if (!localStorage.getItem("admin")) {
   alert("Access denied");
+  window.location.href = "admin-login.html";
+}
+
+// 🔓 LOGOUT FUNCTION
+function logout() {
+  localStorage.removeItem("admin");
   window.location.href = "admin-login.html";
 }
 
