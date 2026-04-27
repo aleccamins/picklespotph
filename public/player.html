@@ -3,6 +3,7 @@
 <head>
   <title>Player - PickleSpotPH</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       font-family: Arial;
@@ -36,16 +37,9 @@
       border: none;
       cursor: pointer;
     }
-
-    .card {
-      background: white;
-      padding: 15px;
-      margin-top: 15px;
-      border-radius: 10px;
-      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-    }
   </style>
 </head>
+
 <body>
 
 <header>Player Dashboard</header>
@@ -56,11 +50,41 @@
   <input type="time" id="time">
 
   <button onclick="book()">Book Court</button>
-
-  <div id="courts"></div>
 </div>
 
-<script src="player.js"></script>
+<script>
+async function book() {
+  const user = document.getElementById("name").value;
+  const date = document.getElementById("date").value;
+  const time = document.getElementById("time").value;
+
+  if (!user || !date || !time) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  const res = await fetch("/book", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      courtName: "Cebu Pickle Court",
+      user,
+      date,
+      time
+    })
+  });
+
+  const msg = await res.text();
+  alert(msg);
+
+  // clear fields
+  document.getElementById("name").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("time").value = "";
+}
+</script>
 
 </body>
 </html>
