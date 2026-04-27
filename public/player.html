@@ -33,40 +33,55 @@
     }
 
     label {
-      display: block;
       font-size: 13px;
-      margin-bottom: 5px;
       color: #555;
+      display: block;
+      margin-bottom: 5px;
     }
 
-    input, select, button {
+    input, select {
       width: 100%;
       padding: 10px;
       border-radius: 8px;
       border: 1px solid #ccc;
-      font-size: 13px;
-    }
-
-    button {
-      background: #3498db;
-      color: white;
-      border: none;
-      margin-top: 10px;
-      cursor: pointer;
-      font-weight: bold;
     }
 
     .slots {
-      margin-top: 15px;
-      background: #f9f9f9;
-      padding: 10px;
-      border-radius: 8px;
-      font-size: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
     }
 
     .slot {
-      padding: 6px;
-      border-bottom: 1px solid #ddd;
+      padding: 8px;
+      background: #ecf0f1;
+      border-radius: 6px;
+      text-align: center;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .slot.selected {
+      background: #3498db;
+      color: white;
+    }
+
+    .slot.disabled {
+      background: #ddd;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
@@ -88,49 +103,37 @@
   </div>
 
   <div class="section">
-    <label>Select Time</label>
-    <input type="time" id="time">
-  </div>
-
-  <div class="section">
     <label>Duration</label>
     <select id="duration">
       <option value="1">1 Hour</option>
       <option value="2">2 Hours</option>
       <option value="3">3 Hours</option>
       <option value="4">4 Hours</option>
-      <option value="5">5 Hours</option>
-      <option value="6">6 Hours</option>
-      <option value="7">7 Hours</option>
-      <option value="8">8 Hours</option>
-      <option value="9">9 Hours</option>
-      <option value="10">10 Hours</option>
-      <option value="11">11 Hours</option>
-      <option value="12">12 Hours</option>
     </select>
+  </div>
+
+  <div class="section">
+    <label>Select Time Slot</label>
+    <div class="slots" id="slots"></div>
   </div>
 
   <button onclick="book()">Book Court</button>
 
-  <!-- AVAILABLE SLOTS -->
-  <div class="slots" id="slots">
-    Available slots will appear here
-  </div>
-
 </div>
 
 <script>
-function formatTime(time) {
-  let [hour, minute] = time.split(":");
-  hour = parseInt(hour);
+let selectedTime = "";
 
-  let ampm = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12;
-
-  return `${hour}:${minute} ${ampm}`;
+function generateTimes() {
+  const times = [];
+  for (let h = 8; h <= 22; h++) {
+    let hour = h % 12 || 12;
+    let ampm = h >= 12 ? "PM" : "AM";
+    times.push(`${hour}:00 ${ampm}`);
+  }
+  return times;
 }
 
-// LOAD EXISTING BOOKINGS
 async function loadSlots() {
   const date = document.getElementById("date").value;
   if (!date) return;
@@ -139,56 +142,55 @@ async function loadSlots() {
   const bookings = await res.json();
 
   const container = document.getElementById("slots");
-  container.innerHTML = "<b>Booked Slots:</b><br>";
+  container.innerHTML = "";
 
-  const filtered = bookings.filter(b => b.date === date);
+  const times = generateTimes();
 
-  if (filtered.length === 0) {
-    container.innerHTML += "No bookings yet ✅";
-    return;
-  }
+  times.forEach(time => {
+    const div = document.createElement("div");
+    div.className = "slot";
+    div.innerText = time;
 
-  filtered.forEach(b => {
-    container.innerHTML += `
-      <div class="slot">
-        ${b.time} (${b.duration} hr)
-      </div>
-    `;
+    const isBooked = bookings.some(b => b.date === date && b.time === time);
+
+    if (isBooked) {
+      div.classList.add("disabled");
+    } else {
+      div.onclick = () => {
+        selectedTime = time;
+        document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
+        div.classList.add("selected");
+      };
+    }
+
+    container.appendChild(div);
   });
 }
 
-// BOOK FUNCTION
 async function book() {
   const user = document.getElementById("name").value;
   const date = document.getElementById("date").value;
-  const time = document.getElementById("time").value;
   const duration = document.getElementById("duration").value;
 
-  if (!user || !date || !time) {
-    alert("Please fill all fields");
+  if (!user || !date || !selectedTime) {
+    alert("Fill all fields");
     return;
   }
 
-  const formattedTime = formatTime(time);
-
   const res = await fetch("/book", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({
       courtName: "Cebu Pickle Court",
       user,
       date,
-      time: formattedTime,
+      time: selectedTime,
       duration
     })
   });
 
-  const msg = await res.text();
-  alert(msg);
-
-  loadSlots(); // refresh slots
+  alert(await res.text());
+  loadSlots();
 }
 </script>
 
