@@ -1,122 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Owner Dashboard</title>
+  <title>Receipt</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
     body {
       font-family: Arial;
       background:#f4f6f9;
-      margin:0;
-      padding:20px;
-    }
-
-    .container {
-      max-width:420px;
-      margin:auto;
-    }
-
-    .card {
-      background:white;
-      padding:15px;
-      border-radius:10px;
-      margin-bottom:12px;
-      box-shadow:0 8px 20px rgba(0,0,0,0.05);
-    }
-
-    .status {
-      margin-top:5px;
-      font-size:12px;
-    }
-
-    .approved { color:green; }
-    .pending { color:orange; }
-    .rejected { color:red; }
-
-    img {
-      width:100%;
-      margin-top:10px;
-      border-radius:8px;
-    }
-
-    .actions {
       display:flex;
-      gap:10px;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      margin:0;
+    }
+
+    .box {
+      background:white;
+      padding:25px;
+      border-radius:12px;
+      width:320px;
+    }
+
+    h2 {
+      text-align:center;
+      margin-bottom:15px;
+    }
+
+    .line {
+      display:flex;
+      justify-content:space-between;
+      margin:5px 0;
+    }
+
+    .total {
+      font-size:18px;
+      font-weight:bold;
+      color:#2ecc71;
       margin-top:10px;
     }
 
     button {
-      flex:1;
-      padding:10px;
+      width:100%;
+      padding:12px;
+      margin-top:15px;
       border:none;
-      border-radius:6px;
+      border-radius:8px;
+      background:#3498db;
       color:white;
-      cursor:pointer;
     }
-
-    .approve { background:#2ecc71; }
-    .reject { background:#e74c3c; }
   </style>
 </head>
 
 <body>
 
-<div class="container">
-  <h2>Owner Dashboard</h2>
+<div class="box">
 
-  <div id="list"></div>
+  <h2>🧾 Receipt</h2>
+
+  <div id="details"></div>
+
+  <div class="total" id="total"></div>
+
+  <button onclick="back()">Back</button>
+
 </div>
 
 <script>
-async function loadBookings() {
-  const res = await fetch("/bookings");
-  const bookings = await res.json();
+const data = JSON.parse(localStorage.getItem("receipt"));
 
-  const container = document.getElementById("list");
-  container.innerHTML = "";
+document.getElementById("details").innerHTML = `
+  <div class="line"><span>Name:</span><span>${data.name}</span></div>
+  <div class="line"><span>Date:</span><span>${data.date}</span></div>
+  <div class="line"><span>Time:</span><span>${data.time}</span></div>
+  <div class="line"><span>Duration:</span><span>${data.duration} hr</span></div>
+`;
 
-  if (bookings.length === 0) {
-    container.innerHTML = "No bookings yet";
-    return;
-  }
+document.getElementById("total").innerText = "Total: ₱" + data.total;
 
-  bookings.reverse().forEach(b => {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <b>${b.user}</b><br>
-      ${b.date} - ${b.time} (${b.duration} hr)
-
-      <div class="status ${b.status.toLowerCase()}">
-        ${b.status}
-      </div>
-
-      <!-- 💰 PAYMENT PROOF -->
-      <img src="${b.proof}" alt="Payment Proof">
-
-      <div class="actions">
-        <button class="approve" onclick="approve('${b.id}')">Approve</button>
-        <button class="reject" onclick="reject('${b.id}')">Reject</button>
-      </div>
-    `;
-
-    container.appendChild(div);
-  });
+function back() {
+  window.location.href = "player.html";
 }
-
-async function approve(id) {
-  await fetch(`/approve/${id}`, { method:"POST" });
-  loadBookings();
-}
-
-async function reject(id) {
-  await fetch(`/reject/${id}`, { method:"POST" });
-  loadBookings();
-}
-
-loadBookings();
 </script>
 
 </body>
