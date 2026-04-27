@@ -13,7 +13,12 @@ const DATA_FILE = "data.json";
 
 // INIT
 if (!fs.existsSync(DATA_FILE)) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify({ bookings: [] }));
+  fs.writeFileSync(DATA_FILE, JSON.stringify({
+    bookings: [],
+    courts: [
+      { name: "Default Court", price: 100 }
+    ]
+  }, null, 2));
 }
 
 function readData() {
@@ -24,7 +29,12 @@ function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// BOOK WITH PAYMENT PROOF
+// GET COURTS
+app.get("/courts", (req, res) => {
+  res.json(readData().courts);
+});
+
+// BOOK
 app.post("/book", (req, res) => {
   const { courtName, user, date, time, duration, proof } = req.body;
 
@@ -37,19 +47,17 @@ app.post("/book", (req, res) => {
     date,
     time,
     duration,
-    proof, // 🔥 STORE IMAGE
+    proof,
     status: "Pending"
   });
 
   writeData(data);
-
-  res.send("Booking submitted with payment proof ✅");
+  res.send("Booked");
 });
 
-// GET BOOKINGS
+// BOOKINGS
 app.get("/bookings", (req, res) => {
-  const data = readData();
-  res.json(data.bookings);
+  res.json(readData().bookings);
 });
 
 // APPROVE / REJECT
@@ -71,10 +79,8 @@ app.post("/reject/:id", (req, res) => {
   res.send("Rejected");
 });
 
-// ROUTES
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("Server running"));
+app.listen(5000);

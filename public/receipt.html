@@ -2,72 +2,24 @@
 <html>
 <head>
   <title>Receipt</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial;
-      background:#f4f6f9;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
-    }
-
-    .box {
-      background:white;
-      padding:25px;
-      border-radius:12px;
-      width:300px;
-      text-align:center;
-    }
-
-    .total {
-      font-size:20px;
-      color:#2ecc71;
-      margin:10px 0;
-    }
-
-    button {
-      width:100%;
-      padding:12px;
-      margin-top:10px;
-      border:none;
-      border-radius:8px;
-      background:#3498db;
-      color:white;
-    }
-  </style>
 </head>
 
 <body>
 
-<div class="box">
-  <h2>🧾 Receipt</h2>
+<h2>Receipt</h2>
 
-  <div id="details"></div>
-
-  <div class="total" id="total"></div>
-
-  <button onclick="back()">Back</button>
-</div>
+<div id="details"></div>
 
 <script>
-const data = JSON.parse(localStorage.getItem("receipt"));
+const d = JSON.parse(localStorage.getItem("receipt"));
 
 document.getElementById("details").innerHTML = `
-  ${data.name}<br>
-  ${data.date}<br>
-  ${data.time}<br>
-  Duration: ${data.duration} hr
+Name: ${d.name}<br>
+Date: ${d.date}<br>
+Time: ${d.time}<br>
+Duration: ${d.duration}<br>
+Total: ₱${d.total}
 `;
-
-document.getElementById("total").innerText = "Total: ₱" + data.total;
-
-function back() {
-  window.location.href = "player.html";
-}
 </script>
 
 </body>

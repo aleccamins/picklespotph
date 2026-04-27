@@ -1,104 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Owner Earnings</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      font-family: Arial;
-      background:#f4f6f9;
-      margin:0;
-      padding:20px;
-    }
-
-    .container {
-      max-width:420px;
-      margin:auto;
-    }
-
-    .card {
-      background:white;
-      padding:15px;
-      border-radius:10px;
-      margin-bottom:10px;
-    }
-
-    .total {
-      font-size:20px;
-      color:#2ecc71;
-      font-weight:bold;
-    }
-
-    button {
-      width:100%;
-      padding:12px;
-      border:none;
-      border-radius:8px;
-      background:#3498db;
-      color:white;
-      margin-top:10px;
-    }
-  </style>
+  <title>Earnings</title>
 </head>
 
 <body>
 
-<div class="container">
+<h2>Earnings</h2>
 
-  <h2>💰 Earnings Dashboard</h2>
-
-  <div class="card">
-    Total Revenue:
-    <div class="total" id="total">₱0</div>
-  </div>
-
-  <div class="card">
-    Approved Bookings:
-    <div id="count">0</div>
-  </div>
-
-  <div id="list"></div>
-
-  <button onclick="back()">Back</button>
-
-</div>
+<div id="daily"></div>
+<div id="monthly"></div>
 
 <script>
 const RATE = 100;
 
 async function load() {
   const res = await fetch("/bookings");
-  const bookings = await res.json();
+  const data = await res.json();
 
-  const approved = bookings.filter(b => b.status === "Approved");
+  const approved = data.filter(b => b.status === "Approved");
 
-  const total = approved.reduce((sum, b) => {
-    return sum + (b.duration * RATE);
-  }, 0);
+  const daily = {};
+  const monthly = {};
 
-  document.getElementById("total").innerText = "₱" + total;
-  document.getElementById("count").innerText = approved.length;
+  approved.forEach(b => {
+    const amount = b.duration * RATE;
 
-  const list = document.getElementById("list");
-  list.innerHTML = "";
+    daily[b.date] = (daily[b.date] || 0) + amount;
 
-  approved.reverse().forEach(b => {
-    const div = document.createElement("div");
-    div.className = "card";
-
-    div.innerHTML = `
-      <b>${b.user}</b><br>
-      ${b.date} ${b.time}<br>
-      ₱${b.duration * RATE}
-    `;
-
-    list.appendChild(div);
+    const month = b.date.slice(0,7);
+    monthly[month] = (monthly[month] || 0) + amount;
   });
-}
 
-function back() {
-  window.location.href = "owner.html";
+  document.getElementById("daily").innerHTML =
+    "<h3>Daily</h3>" +
+    Object.entries(daily).map(d => `${d[0]} - ₱${d[1]}`).join("<br>");
+
+  document.getElementById("monthly").innerHTML =
+    "<h3>Monthly</h3>" +
+    Object.entries(monthly).map(d => `${d[0]} - ₱${d[1]}`).join("<br>");
 }
 
 load();
