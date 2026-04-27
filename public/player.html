@@ -23,7 +23,7 @@
       padding: 20px;
     }
 
-    input, button {
+    input, select, button {
       width: 100%;
       padding: 12px;
       margin: 8px 0;
@@ -49,19 +49,39 @@
   <input type="date" id="date">
   <input type="time" id="time">
 
+  <!-- NEW: Duration -->
+  <select id="duration">
+    <option value="1">1 Hour</option>
+    <option value="2">2 Hours</option>
+    <option value="3">3 Hours</option>
+  </select>
+
   <button onclick="book()">Book Court</button>
 </div>
 
 <script>
+function formatTime(time) {
+  let [hour, minute] = time.split(":");
+  hour = parseInt(hour);
+
+  let ampm = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+
+  return `${hour}:${minute} ${ampm}`;
+}
+
 async function book() {
   const user = document.getElementById("name").value;
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
+  const duration = document.getElementById("duration").value;
 
   if (!user || !date || !time) {
     alert("Please fill all fields");
     return;
   }
+
+  const formattedTime = formatTime(time);
 
   const res = await fetch("/book", {
     method: "POST",
@@ -72,14 +92,14 @@ async function book() {
       courtName: "Cebu Pickle Court",
       user,
       date,
-      time
+      time: formattedTime,
+      duration
     })
   });
 
   const msg = await res.text();
   alert(msg);
 
-  // clear fields
   document.getElementById("name").value = "";
   document.getElementById("date").value = "";
   document.getElementById("time").value = "";

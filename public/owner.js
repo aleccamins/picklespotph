@@ -14,6 +14,7 @@ async function loadBookings() {
       <p><b>User:</b> ${b.user}</p>
       <p><b>Date:</b> ${b.date}</p>
       <p><b>Time:</b> ${b.time}</p>
+      <p><b>Duration:</b> ${b.duration} hour(s)</p>
       <p><b>Status:</b> ${b.status}</p>
       <button class="approve" onclick="approve('${b.id}')">Approve</button>
       <button class="reject" onclick="reject('${b.id}')">Reject</button>
