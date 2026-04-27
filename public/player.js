@@ -1,32 +1,18 @@
-const API = "http://localhost:5000";
-
-// LOAD COURTS
-async function loadCourts() {
-  const res = await fetch(API + "/courts");
-  const data = await res.json();
-
-  const container = document.getElementById("courts");
-  container.innerHTML = "";
-
-  data.forEach(court => {
-    container.innerHTML += `
-      <div style="background:white;padding:10px;margin:10px;border-radius:10px;">
-        <h3>${court.name}</h3>
-        <p>${court.location}</p>
-      </div>
-    `;
-  });
-}
-
-// CREATE BOOKING
-async function createBooking() {
-  const user = document.getElementById("user").value;
+async function book() {
+  const user = document.getElementById("name").value;
   const date = document.getElementById("date").value;
   const time = document.getElementById("time").value;
 
-  const res = await fetch(API + "/book", {
+  if (!user || !date || !time) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  const res = await fetch("/book", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({
       courtName: "Cebu Pickle Court",
       user,
@@ -37,7 +23,9 @@ async function createBooking() {
 
   const msg = await res.text();
   alert(msg);
-}
 
-// INIT
-loadCourts();
+  // Clear fields
+  document.getElementById("name").value = "";
+  document.getElementById("date").value = "";
+  document.getElementById("time").value = "";
+}
