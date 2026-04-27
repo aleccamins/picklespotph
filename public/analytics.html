@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analytics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: #fafafa;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .chart {
+      margin-top: 20px;
+    }
+
+    .bar {
+      height: 25px;
+      margin: 10px 0;
+      border-radius: 6px;
+      color: white;
+      padding-left: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .approved { background: #2ecc71; }
+    .pending { background: #f1c40f; }
+    .rejected { background: #e74c3c; }
+
+    .logout {
+      float: right;
+      background: #e74c3c;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <h2>📊 Analytics Dashboard</h2>
+
+  <div class="card">
+    <span>Total Bookings</span>
+    <span id="total">0</span>
+  </div>
+
+  <div class="card">
+    <span>Approved</span>
+    <span id="approved">0</span>
+  </div>
+
+  <div class="card">
+    <span>Pending</span>
+    <span id="pending">0</span>
+  </div>
+
+  <div class="card">
+    <span>Rejected</span>
+    <span id="rejected">0</span>
+  </div>
+
+  <div class="chart">
+    <div id="approvedBar" class="bar approved"></div>
+    <div id="pendingBar" class="bar pending"></div>
+    <div id="rejectedBar" class="bar rejected"></div>
+  </div>
+
+</div>
+
+<script>
+// 🔐 PROTECT
+if (!localStorage.getItem("adminToken")) {
+  window.location.href = "admin-login.html";
+}
+
+// LOGOUT
+function logout() {
+  localStorage.removeItem("adminToken");
+  window.location.href = "admin-login.html";
+}
+
+// LOAD DATA
+async function loadAnalytics() {
+  const res = await fetch("/bookings");
+  const bookings = await res.json();
+
+  const total = bookings.length;
+  const approved = bookings.filter(b => b.status === "Approved").length;
+  const pending = bookings.filter(b => b.status === "Pending").length;
+  const rejected = bookings.filter(b => b.status === "Rejected").length;
+
+  document.getElementById("total").innerText = total;
+  document.getElementById("approved").innerText = approved;
+  document.getElementById("pending").innerText = pending;
+  document.getElementById("rejected").innerText = rejected;
+
+  // Bars
+  const max = total || 1;
+
+  document.getElementById("approvedBar").style.width = (approved/max)*100 + "%";
+  document.getElementById("approvedBar").innerText = "Approved";
+
+  document.getElementById("pendingBar").style.width = (pending/max)*100 + "%";
+  document.getElementById("pendingBar").innerText = "Pending";
+
+  document.getElementById("rejectedBar").style.width = (rejected/max)*100 + "%";
+  document.getElementById("rejectedBar").innerText = "Rejected";
+}
+
+loadAnalytics();
+</script>
+
+</body>
+</html>
