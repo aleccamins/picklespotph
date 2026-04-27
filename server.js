@@ -11,10 +11,16 @@ app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
 
+// COURTS LIST
+const courts = [
+  { name: "Cebu Pickle Court" },
+  { name: "Dumaguete Court 1" },
+  { name: "Dumaguete Court 2" }
+];
+
 // READ DATA
 function readData() {
-  const data = fs.readFileSync(DATA_FILE);
-  return JSON.parse(data);
+  return JSON.parse(fs.readFileSync(DATA_FILE));
 }
 
 // WRITE DATA
@@ -22,33 +28,38 @@ function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// Convert "4:00 PM" → minutes
+// TIME → MINUTES
 function timeToMinutes(timeStr) {
-  let [time, modifier] = timeStr.split(" ");
-  let [hours, minutes] = time.split(":");
+  let [time, mod] = timeStr.split(" ");
+  let [h, m] = time.split(":");
 
-  hours = parseInt(hours);
-  minutes = parseInt(minutes);
+  h = parseInt(h);
+  m = parseInt(m);
 
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
+  if (mod === "PM" && h !== 12) h += 12;
+  if (mod === "AM" && h === 12) h = 0;
 
-  return hours * 60 + minutes;
+  return h * 60 + m;
 }
 
-// CHECK OVERLAP
-function isOverlapping(newBooking, existingBooking) {
-  if (newBooking.date !== existingBooking.date) return false;
-  if (newBooking.courtName !== existingBooking.courtName) return false;
+// OVERLAP CHECK
+function isOverlapping(newB, existingB) {
+  if (newB.date !== existingB.date) return false;
+  if (newB.courtName !== existingB.courtName) return false;
 
-  const newStart = timeToMinutes(newBooking.time);
-  const newEnd = newStart + (parseInt(newBooking.duration) * 60);
+  const newStart = timeToMinutes(newB.time);
+  const newEnd = newStart + (parseInt(newB.duration) * 60);
 
-  const existingStart = timeToMinutes(existingBooking.time);
-  const existingEnd = existingStart + (parseInt(existingBooking.duration || 1) * 60);
+  const oldStart = timeToMinutes(existingB.time);
+  const oldEnd = oldStart + (parseInt(existingB.duration || 1) * 60);
 
-  return newStart < existingEnd && newEnd > existingStart;
+  return newStart < oldEnd && newEnd > oldStart;
 }
+
+// GET COURTS
+app.get("/courts", (req, res) => {
+  res.json(courts);
+});
 
 // GET BOOKINGS
 app.get("/bookings", (req, res) => {
@@ -63,6 +74,7 @@ app.post("/book", (req, res) => {
   let data = readData();
 
   const newBooking = {
+    id: Date.now().toString(),
     courtName,
     user,
     date,
@@ -74,10 +86,8 @@ app.post("/book", (req, res) => {
   const conflict = data.bookings.find(b => isOverlapping(newBooking, b));
 
   if (conflict) {
-    return res.send("Time slot overlaps with existing booking ❌");
+    return res.send("Time slot overlaps ❌");
   }
-
-  newBooking.id = Date.now().toString();
 
   data.bookings.push(newBooking);
   writeData(data);
@@ -88,11 +98,9 @@ app.post("/book", (req, res) => {
 // APPROVE
 app.post("/approve/:id", (req, res) => {
   let data = readData();
-
   data.bookings = data.bookings.map(b =>
     b.id === req.params.id ? { ...b, status: "Approved" } : b
   );
-
   writeData(data);
   res.send("Approved");
 });
@@ -100,11 +108,9 @@ app.post("/approve/:id", (req, res) => {
 // REJECT
 app.post("/reject/:id", (req, res) => {
   let data = readData();
-
   data.bookings = data.bookings.map(b =>
     b.id === req.params.id ? { ...b, status: "Rejected" } : b
   );
-
   writeData(data);
   res.send("Rejected");
 });
@@ -115,6 +121,4 @@ app.get("/", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log("Server running");
-});
+app.listen(PORT, () => console.log("Server running"));

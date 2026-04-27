@@ -5,19 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial;
-      background: #f4f6f9;
-      margin: 0;
-    }
-
-    header {
-      background: #3498db;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 20px;
-    }
+    body { font-family: Arial; background:#f4f6f9; margin:0; }
+    header { background:#3498db; color:white; padding:15px; text-align:center; }
 
     .container {
       max-width: 380px;
@@ -28,60 +17,37 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
-    .section {
-      margin-bottom: 15px;
-    }
-
-    label {
-      font-size: 13px;
-      color: #555;
-      display: block;
-      margin-bottom: 5px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 10px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
+    label { font-size:13px; display:block; margin-top:10px; }
+    input, select { width:100%; padding:10px; margin-top:5px; border-radius:8px; border:1px solid #ccc; }
 
     .slots {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-top: 10px;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:6px;
+      margin-top:10px;
     }
 
     .slot {
-      padding: 8px;
-      background: #ecf0f1;
-      border-radius: 6px;
-      text-align: center;
-      cursor: pointer;
-      font-size: 12px;
+      padding:8px;
+      background:#ecf0f1;
+      border-radius:6px;
+      text-align:center;
+      cursor:pointer;
+      font-size:12px;
     }
 
-    .slot.selected {
-      background: #3498db;
-      color: white;
-    }
-
-    .slot.disabled {
-      background: #ddd;
-      color: #999;
-      cursor: not-allowed;
-    }
+    .slot.disabled { background:#ddd; color:#999; cursor:not-allowed; }
+    .slot.selected { background:#3498db; color:white; }
 
     button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      width:100%;
+      padding:12px;
+      margin-top:15px;
+      background:#3498db;
+      color:white;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -92,30 +58,25 @@
 
 <div class="container">
 
-  <div class="section">
-    <label>Name</label>
-    <input id="name">
-  </div>
+  <label>Select Court</label>
+  <select id="court" onchange="loadSlots()"></select>
 
-  <div class="section">
-    <label>Select Date</label>
-    <input type="date" id="date" onchange="loadSlots()">
-  </div>
+  <label>Name</label>
+  <input id="name">
 
-  <div class="section">
-    <label>Duration</label>
-    <select id="duration" onchange="loadSlots()">
-      <option value="1">1 Hour</option>
-      <option value="2">2 Hours</option>
-      <option value="3">3 Hours</option>
-      <option value="4">4 Hours</option>
-    </select>
-  </div>
+  <label>Date</label>
+  <input type="date" id="date" onchange="loadSlots()">
 
-  <div class="section">
-    <label>Select Time Slot</label>
-    <div class="slots" id="slots"></div>
-  </div>
+  <label>Duration</label>
+  <select id="duration" onchange="loadSlots()">
+    <option value="1">1 Hour</option>
+    <option value="2">2 Hours</option>
+    <option value="3">3 Hours</option>
+    <option value="4">4 Hours</option>
+  </select>
+
+  <label>Select Time</label>
+  <div id="slots" class="slots"></div>
 
   <button onclick="book()">Book Court</button>
 
@@ -124,37 +85,51 @@
 <script>
 let selectedTime = "";
 
+async function loadCourts() {
+  const res = await fetch("/courts");
+  const courts = await res.json();
+  const select = document.getElementById("court");
+
+  select.innerHTML = "";
+  courts.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.name;
+    opt.innerText = c.name;
+    select.appendChild(opt);
+  });
+
+  loadSlots();
+}
+
 function generateTimes() {
   const times = [];
   for (let h = 8; h <= 22; h++) {
     let hour = h % 12 || 12;
     let ampm = h >= 12 ? "PM" : "AM";
-    times.push({
-      label: `${hour}:00 ${ampm}`,
-      minutes: h * 60
-    });
+    times.push({ label: `${hour}:00 ${ampm}`, minutes: h*60 });
   }
   return times;
 }
 
-function timeToMinutes(timeStr) {
-  let [time, modifier] = timeStr.split(" ");
-  let [h, m] = time.split(":");
+function toMinutes(timeStr) {
+  let [t, mod] = timeStr.split(" ");
+  let [h,m] = t.split(":");
 
   h = parseInt(h);
   m = parseInt(m);
 
-  if (modifier === "PM" && h !== 12) h += 12;
-  if (modifier === "AM" && h === 12) h = 0;
+  if (mod==="PM" && h!==12) h+=12;
+  if (mod==="AM" && h===12) h=0;
 
-  return h * 60 + m;
+  return h*60+m;
 }
 
 async function loadSlots() {
   const date = document.getElementById("date").value;
+  const court = document.getElementById("court").value;
   const duration = parseInt(document.getElementById("duration").value);
 
-  if (!date) return;
+  if (!date || !court) return;
 
   const res = await fetch("/bookings");
   const bookings = await res.json();
@@ -170,15 +145,16 @@ async function loadSlots() {
     div.innerText = t.label;
 
     const newStart = t.minutes;
-    const newEnd = newStart + duration * 60;
+    const newEnd = newStart + duration*60;
 
     const overlap = bookings.some(b => {
       if (b.date !== date) return false;
+      if (b.courtName !== court) return false;
 
-      const bStart = timeToMinutes(b.time);
-      const bEnd = bStart + (parseInt(b.duration || 1) * 60);
+      const s = toMinutes(b.time);
+      const e = s + (parseInt(b.duration||1)*60);
 
-      return newStart < bEnd && newEnd > bStart;
+      return newStart < e && newEnd > s;
     });
 
     if (overlap) {
@@ -186,7 +162,7 @@ async function loadSlots() {
     } else {
       div.onclick = () => {
         selectedTime = t.label;
-        document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
+        document.querySelectorAll(".slot").forEach(s=>s.classList.remove("selected"));
         div.classList.add("selected");
       };
     }
@@ -198,6 +174,7 @@ async function loadSlots() {
 async function book() {
   const user = document.getElementById("name").value;
   const date = document.getElementById("date").value;
+  const court = document.getElementById("court").value;
   const duration = document.getElementById("duration").value;
 
   if (!user || !date || !selectedTime) {
@@ -206,10 +183,10 @@ async function book() {
   }
 
   const res = await fetch("/book", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
     body: JSON.stringify({
-      courtName: "Cebu Pickle Court",
+      courtName: court,
       user,
       date,
       time: selectedTime,
@@ -220,6 +197,8 @@ async function book() {
   alert(await res.text());
   loadSlots();
 }
+
+loadCourts();
 </script>
 
 </body>
