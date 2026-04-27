@@ -104,7 +104,7 @@
 
   <div class="section">
     <label>Duration</label>
-    <select id="duration">
+    <select id="duration" onchange="loadSlots()">
       <option value="1">1 Hour</option>
       <option value="2">2 Hours</option>
       <option value="3">3 Hours</option>
@@ -129,13 +129,31 @@ function generateTimes() {
   for (let h = 8; h <= 22; h++) {
     let hour = h % 12 || 12;
     let ampm = h >= 12 ? "PM" : "AM";
-    times.push(`${hour}:00 ${ampm}`);
+    times.push({
+      label: `${hour}:00 ${ampm}`,
+      minutes: h * 60
+    });
   }
   return times;
 }
 
+function timeToMinutes(timeStr) {
+  let [time, modifier] = timeStr.split(" ");
+  let [h, m] = time.split(":");
+
+  h = parseInt(h);
+  m = parseInt(m);
+
+  if (modifier === "PM" && h !== 12) h += 12;
+  if (modifier === "AM" && h === 12) h = 0;
+
+  return h * 60 + m;
+}
+
 async function loadSlots() {
   const date = document.getElementById("date").value;
+  const duration = parseInt(document.getElementById("duration").value);
+
   if (!date) return;
 
   const res = await fetch("/bookings");
@@ -146,18 +164,28 @@ async function loadSlots() {
 
   const times = generateTimes();
 
-  times.forEach(time => {
+  times.forEach(t => {
     const div = document.createElement("div");
     div.className = "slot";
-    div.innerText = time;
+    div.innerText = t.label;
 
-    const isBooked = bookings.some(b => b.date === date && b.time === time);
+    const newStart = t.minutes;
+    const newEnd = newStart + duration * 60;
 
-    if (isBooked) {
+    const overlap = bookings.some(b => {
+      if (b.date !== date) return false;
+
+      const bStart = timeToMinutes(b.time);
+      const bEnd = bStart + (parseInt(b.duration || 1) * 60);
+
+      return newStart < bEnd && newEnd > bStart;
+    });
+
+    if (overlap) {
       div.classList.add("disabled");
     } else {
       div.onclick = () => {
-        selectedTime = time;
+        selectedTime = t.label;
         document.querySelectorAll(".slot").forEach(s => s.classList.remove("selected"));
         div.classList.add("selected");
       };
