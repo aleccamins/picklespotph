@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PickleSpotPH Login</title>
+</head>
+
+<body style="font-family:Arial; text-align:center; margin-top:100px;">
+
+  <h1>PickleSpotPH</h1>
+
+  <h2>Login as:</h2>
+
+  <button onclick="login('player')">Player</button>
+  <button onclick="login('owner')">Owner</button>
+
+  <script>
+    function login(role) {
+      if (role === "player") {
+        window.location.href = "player.html";
+      } else {
+        window.location.href = "owner.html";
+      }
+    }
+  </script>
+
+</body>
+</html>
