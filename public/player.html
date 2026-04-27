@@ -20,18 +20,28 @@
     }
 
     .container {
-      max-width: 380px;   /* 🔥 tighter width */
-      margin: 40px auto;
+      max-width: 380px;
+      margin: 30px auto;
       background: white;
-      padding: 25px;
+      padding: 20px;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    .section {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 5px;
+      color: #555;
     }
 
     input, select, button {
       width: 100%;
       padding: 10px;
-      margin: 6px 0;
       border-radius: 8px;
       border: 1px solid #ccc;
       font-size: 13px;
@@ -41,12 +51,22 @@
       background: #3498db;
       color: white;
       border: none;
+      margin-top: 10px;
       cursor: pointer;
       font-weight: bold;
     }
 
-    button:hover {
-      opacity: 0.9;
+    .slots {
+      margin-top: 15px;
+      background: #f9f9f9;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+
+    .slot {
+      padding: 6px;
+      border-bottom: 1px solid #ddd;
     }
   </style>
 </head>
@@ -56,26 +76,47 @@
 <header>Player Dashboard</header>
 
 <div class="container">
-  <input id="name" placeholder="Your Name">
-  <input type="date" id="date">
-  <input type="time" id="time">
 
-  <select id="duration">
-    <option value="1">1 Hour</option>
-    <option value="2">2 Hours</option>
-    <option value="3">3 Hours</option>
-    <option value="4">4 Hours</option>
-    <option value="5">5 Hours</option>
-    <option value="6">6 Hours</option>
-    <option value="7">7 Hours</option>
-    <option value="8">8 Hours</option>
-    <option value="9">9 Hours</option>
-    <option value="10">10 Hours</option>
-    <option value="11">11 Hours</option>
-    <option value="12">12 Hours</option>
-  </select>
+  <div class="section">
+    <label>Name</label>
+    <input id="name">
+  </div>
+
+  <div class="section">
+    <label>Select Date</label>
+    <input type="date" id="date" onchange="loadSlots()">
+  </div>
+
+  <div class="section">
+    <label>Select Time</label>
+    <input type="time" id="time">
+  </div>
+
+  <div class="section">
+    <label>Duration</label>
+    <select id="duration">
+      <option value="1">1 Hour</option>
+      <option value="2">2 Hours</option>
+      <option value="3">3 Hours</option>
+      <option value="4">4 Hours</option>
+      <option value="5">5 Hours</option>
+      <option value="6">6 Hours</option>
+      <option value="7">7 Hours</option>
+      <option value="8">8 Hours</option>
+      <option value="9">9 Hours</option>
+      <option value="10">10 Hours</option>
+      <option value="11">11 Hours</option>
+      <option value="12">12 Hours</option>
+    </select>
+  </div>
 
   <button onclick="book()">Book Court</button>
+
+  <!-- AVAILABLE SLOTS -->
+  <div class="slots" id="slots">
+    Available slots will appear here
+  </div>
+
 </div>
 
 <script>
@@ -89,6 +130,34 @@ function formatTime(time) {
   return `${hour}:${minute} ${ampm}`;
 }
 
+// LOAD EXISTING BOOKINGS
+async function loadSlots() {
+  const date = document.getElementById("date").value;
+  if (!date) return;
+
+  const res = await fetch("/bookings");
+  const bookings = await res.json();
+
+  const container = document.getElementById("slots");
+  container.innerHTML = "<b>Booked Slots:</b><br>";
+
+  const filtered = bookings.filter(b => b.date === date);
+
+  if (filtered.length === 0) {
+    container.innerHTML += "No bookings yet ✅";
+    return;
+  }
+
+  filtered.forEach(b => {
+    container.innerHTML += `
+      <div class="slot">
+        ${b.time} (${b.duration} hr)
+      </div>
+    `;
+  });
+}
+
+// BOOK FUNCTION
 async function book() {
   const user = document.getElementById("name").value;
   const date = document.getElementById("date").value;
@@ -119,9 +188,7 @@ async function book() {
   const msg = await res.text();
   alert(msg);
 
-  document.getElementById("name").value = "";
-  document.getElementById("date").value = "";
-  document.getElementById("time").value = "";
+  loadSlots(); // refresh slots
 }
 </script>
 
