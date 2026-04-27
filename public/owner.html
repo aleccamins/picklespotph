@@ -1,17 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Owner Dashboard</title>
+  <title>Owner - PickleSpotPH</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f9;
+      margin: 0;
+    }
+
+    header {
+      background: #2ecc71;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 8px 12px;
+      margin: 5px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .approve {
+      background: #2ecc71;
+      color: white;
+    }
+
+    .reject {
+      background: #e74c3c;
+      color: white;
+    }
+  </style>
 </head>
+<body>
 
-<body style="font-family:Arial;">
+<header>Owner Dashboard</header>
 
-  <h1>Owner Dashboard</h1>
-
-  <h2>Bookings</h2>
+<div class="container">
   <div id="bookings"></div>
+</div>
 
-  <script src="owner.js"></script>
+<script src="owner.js"></script>
 
 </body>
 </html>
