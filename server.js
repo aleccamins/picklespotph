@@ -22,6 +22,34 @@ function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
+// Convert "4:00 PM" → minutes
+function timeToMinutes(timeStr) {
+  let [time, modifier] = timeStr.split(" ");
+  let [hours, minutes] = time.split(":");
+
+  hours = parseInt(hours);
+  minutes = parseInt(minutes);
+
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+}
+
+// CHECK OVERLAP
+function isOverlapping(newBooking, existingBooking) {
+  if (newBooking.date !== existingBooking.date) return false;
+  if (newBooking.courtName !== existingBooking.courtName) return false;
+
+  const newStart = timeToMinutes(newBooking.time);
+  const newEnd = newStart + (parseInt(newBooking.duration) * 60);
+
+  const existingStart = timeToMinutes(existingBooking.time);
+  const existingEnd = existingStart + (parseInt(existingBooking.duration || 1) * 60);
+
+  return newStart < existingEnd && newEnd > existingStart;
+}
+
 // GET BOOKINGS
 app.get("/bookings", (req, res) => {
   const data = readData();
@@ -30,26 +58,26 @@ app.get("/bookings", (req, res) => {
 
 // CREATE BOOKING
 app.post("/book", (req, res) => {
-  const { courtName, user, date, time } = req.body;
+  const { courtName, user, date, time, duration } = req.body;
 
   let data = readData();
 
-  const exists = data.bookings.find(
-    b => b.courtName === courtName && b.date === date && b.time === time
-  );
-
-  if (exists) {
-    return res.send("Slot already booked ❌");
-  }
-
   const newBooking = {
-    id: Date.now().toString(),
     courtName,
     user,
     date,
     time,
+    duration,
     status: "Pending"
   };
+
+  const conflict = data.bookings.find(b => isOverlapping(newBooking, b));
+
+  if (conflict) {
+    return res.send("Time slot overlaps with existing booking ❌");
+  }
+
+  newBooking.id = Date.now().toString();
 
   data.bookings.push(newBooking);
   writeData(data);
