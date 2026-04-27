@@ -1,158 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>PickleSpotPH</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background: #f4f6f9;
-    }
-
-    .app {
-      max-width: 420px;
-      margin: auto;
-      background: #fff;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      background: #3498db;
-      color: white;
-      padding: 16px;
-      text-align: center;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .content {
-      padding: 16px;
-      flex: 1;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-
-    label {
-      font-size: 13px;
-      color: #555;
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    input, select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ddd;
-      margin-bottom: 12px;
-      font-size: 14px;
-      box-sizing: border-box;
-    }
-
-    .slots {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .slot {
-      padding: 12px;
-      text-align: center;
-      border-radius: 10px;
-      background: #ecf0f1;
-      font-size: 13px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .slot:hover {
-      transform: scale(1.03);
-    }
-
-    .slot.selected {
-      background: #3498db;
-      color: white;
-      font-weight: bold;
-    }
-
-    .slot.disabled {
-      background: #dcdde1;
-      color: #888;
-      pointer-events: none;
-    }
-
-    .footer {
-      padding: 15px;
-      background: white;
-      border-top: 1px solid #eee;
-    }
-
-    .book-btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      background: #3498db;
-      color: white;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .book-btn:hover {
-      opacity: 0.9;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="app">
-
-  <div class="header">
-    PickleSpotPH
-  </div>
-
-  <div class="content">
-
-    <div class="card">
-      <label>Your Name</label>
-      <input id="name" placeholder="Enter your name">
-
-      <label>Select Date</label>
-      <input type="date" id="date" onchange="loadSlots()">
-
-      <label>Duration</label>
-      <select id="duration">
-        <option value="1">1 Hour</option>
-        <option value="2">2 Hours</option>
-        <option value="3">3 Hours</option>
-      </select>
-    </div>
-
-    <div class="card">
-      <label>Available Time Slots</label>
-      <div id="slots" class="slots"></div>
-    </div>
-
-  </div>
-
-  <div class="footer">
-    <button class="book-btn" onclick="book()">Book Court</button>
-  </div>
-
-</div>
+<!-- ONLY showing updated JS part — but you replace FULL FILE if unsure -->
 
 <script>
 let selectedTime = "";
@@ -211,6 +57,14 @@ async function book() {
     return;
   }
 
+  // SAVE USER NAME
+  localStorage.setItem("playerName", name);
+
+  // SAVE LAST BOOKING
+  localStorage.setItem("lastBooking", JSON.stringify({
+    date, time: selectedTime, duration
+  }));
+
   const res = await fetch("/book", {
     method:"POST",
     headers:{ "Content-Type":"application/json" },
@@ -223,12 +77,8 @@ async function book() {
     })
   });
 
-  const msg = await res.text();
-  alert(msg);
+  await res.text();
 
-  loadSlots();
+  window.location.href = "confirmation.html";
 }
 </script>
-
-</body>
-</html>
