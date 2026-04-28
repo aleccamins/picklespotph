@@ -1,4 +1,6 @@
 let selectedTime = "";
+let selectedDate = "";
+let selectedCourt = localStorage.getItem("selectedCourt") || "Court A";
 
 const times = [
   "8:00 AM","9:00 AM","10:00 AM",
@@ -9,8 +11,8 @@ const times = [
 
 // LOAD SLOTS
 async function loadSlots() {
-  const date = document.getElementById("date").value;
-  if (!date) return;
+  selectedDate = document.getElementById("date").value;
+  if (!selectedDate) return;
 
   const res = await fetch("/bookings");
   const bookings = await res.json();
@@ -24,8 +26,9 @@ async function loadSlots() {
     div.innerText = time;
 
     const taken = bookings.find(b =>
-      b.date === date &&
+      b.date === selectedDate &&
       b.time === time &&
+      b.courtName === selectedCourt &&
       (b.status === "Paid" || b.status === "Approved")
     );
 
@@ -47,34 +50,50 @@ function selectSlot(el, time) {
   selectedTime = time;
 }
 
-// PAY VIA PAYMONGO
+// PAY / BOOK
 async function pay() {
   const name = document.getElementById("name").value;
-  const date = document.getElementById("date").value;
   const duration = document.getElementById("duration").value;
 
-  if (!name || !date || !selectedTime) {
+  if (!name || !selectedDate || !selectedTime) {
     alert("Complete all fields");
     return;
   }
 
-  const res = await fetch("/create-payment", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({
-      name,
-      date,
-      time: selectedTime,
-      duration,
-      const selectedCourt = localStorage.getItem("selectedCourt") || "Default Court";
+  // 🔥 SAVE FOR CONFIRMATION PAGE
+  localStorage.setItem("lastBooking", JSON.stringify({
+    court: selectedCourt,
+    date: selectedDate,
+    time: selectedTime,
+    duration: duration
+  }));
 
-...
+  // 🔥 OPTIONAL: CALL PAYMENT API (if using PayMongo)
+  try {
+    const res = await fetch("/create-payment", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        name,
+        date: selectedDate,
+        time: selectedTime,
+        duration,
+        courtName: selectedCourt
+      })
+    });
 
-courtName: selectedCourt
-    })
-  });
+    const data = await res.json();
 
-  const data = await res.json();
+    // 👉 Redirect to PayMongo checkout
+    if (data.checkout_url) {
+      window.location.href = data.checkout_url;
+      return;
+    }
 
-  window.location.href = data.checkout_url;
+  } catch (err) {
+    console.log("Payment API error, fallback to confirmation");
+  }
+
+  // 🔥 FALLBACK (if no payment or testing)
+  window.location.href = "confirmation.html";
 }
