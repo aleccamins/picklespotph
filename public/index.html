@@ -8,8 +8,10 @@
     body {
       margin:0;
       font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+      background:#f4f6f9;
     }
 
+    /* HERO */
     .hero {
       position:relative;
       height:100vh;
@@ -28,25 +30,35 @@
       background:linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
     }
 
-    /* 🔥 GLASS CARD */
+    /* GLASS */
     .glass {
       position:relative;
       z-index:2;
       padding:25px;
       border-radius:20px;
-
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255,255,255,0.1);
       backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      border:1px solid rgba(255,255,255,0.2);
+      box-shadow:0 8px 32px rgba(0,0,0,0.3);
+      max-width:350px;
 
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      /* ANIMATION */
+      animation: fadeInUp 1s ease;
+    }
 
-      max-width: 350px;
+    @keyframes fadeInUp {
+      from {
+        opacity:0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity:1;
+        transform: translateY(0);
+      }
     }
 
     .logo {
-      width:100px;
+      width:90px;
       border-radius:50%;
       margin-bottom:10px;
     }
@@ -86,7 +98,6 @@
     /* COURTS */
     .section {
       padding:20px;
-      background:#f4f6f9;
       max-width:420px;
       margin:auto;
     }
@@ -97,6 +108,8 @@
       margin-bottom:15px;
       overflow:hidden;
       box-shadow:0 8px 20px rgba(0,0,0,0.05);
+
+      animation: fadeInUp 0.8s ease;
     }
 
     .court-img {
@@ -134,15 +147,31 @@
       color:white;
       font-weight:bold;
     }
+
+    /* 🔥 FLOATING BUTTON */
+    .floating-btn {
+      position:fixed;
+      bottom:20px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#2ecc71;
+      color:white;
+      padding:14px 20px;
+      border-radius:50px;
+      font-weight:bold;
+      box-shadow:0 6px 20px rgba(0,0,0,0.3);
+      cursor:pointer;
+      z-index:999;
+    }
   </style>
 </head>
 
 <body>
 
+<!-- HERO -->
 <div class="hero">
   <div class="overlay"></div>
 
-  <!-- 🔥 GLASS BOX -->
   <div class="glass">
     <img src="images/logo.jpg" class="logo">
 
@@ -156,9 +185,15 @@
   </div>
 </div>
 
+<!-- COURTS -->
 <div class="section">
   <h3>Available Courts Today</h3>
   <div id="courts"></div>
+</div>
+
+<!-- FLOATING CTA -->
+<div class="floating-btn" onclick="goPlayer()">
+  Book a Court
 </div>
 
 <script>
