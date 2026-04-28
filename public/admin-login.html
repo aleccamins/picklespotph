@@ -12,37 +12,21 @@
       justify-content: center;
       align-items: center;
       height: 100vh;
-      margin: 0;
     }
 
-    .login-box {
+    .box {
       background: white;
-      padding: 30px;
-      border-radius: 12px;
-      width: 320px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      text-align: left;
-      font-size: 13px;
-      margin-bottom: 5px;
-      color: #555;
+      padding: 25px;
+      border-radius: 10px;
+      width: 300px;
     }
 
     input {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 15px;
-      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 6px;
       border: 1px solid #ccc;
-      box-sizing: border-box;
     }
 
     button {
@@ -50,53 +34,42 @@
       padding: 12px;
       border: none;
       border-radius: 8px;
-      background: #3498db;
+      background: #e74c3c;
       color: white;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      opacity: 0.9;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
 
-<div class="login-box">
-  <h2>Admin Login</h2>
+<div class="box">
+  <h3>Admin Login</h3>
 
-  <label>Username</label>
-  <input id="username" placeholder="Enter username">
-
-  <label>Password</label>
-  <input id="password" type="password" placeholder="Enter password">
+  <input id="email" placeholder="Admin Email">
 
   <button onclick="login()">Login</button>
 </div>
 
 <script>
-async function login() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+const admins = [
+  "alec.camins@gmail.com",
+  "admin2@email.com",
+  "admin3@email.com",
+  "admin4@email.com",
+  "admin5@email.com",
+  "admin6@email.com"
+];
 
-  const res = await fetch("/admin-login", {
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ username, password })
-  });
+function login() {
+  const email = document.getElementById("email").value;
 
-  const data = await res.json();
-
-  if (!data.success) {
-    alert("Invalid login ❌");
-    return;
+  if (admins.includes(email)) {
+    localStorage.setItem("admin", email);
+    window.location.href = "dashboard.html";
+  } else {
+    alert("Not authorized");
   }
-
-  localStorage.setItem("adminToken", data.token);
-
-  window.location.href = "secure-admin-portal-92xk.html";
 }
 </script>
 
