@@ -60,15 +60,6 @@ async function pay() {
     return;
   }
 
-  // 🔥 SAVE FOR CONFIRMATION PAGE
-  localStorage.setItem("lastBooking", JSON.stringify({
-    court: selectedCourt,
-    date: selectedDate,
-    time: selectedTime,
-    duration: duration
-  }));
-
-  // 🔥 OPTIONAL: CALL PAYMENT API (if using PayMongo)
   try {
     const res = await fetch("/create-payment", {
       method:"POST",
@@ -84,16 +75,15 @@ async function pay() {
 
     const data = await res.json();
 
-    // 👉 Redirect to PayMongo checkout
     if (data.checkout_url) {
       window.location.href = data.checkout_url;
       return;
     }
 
-  } catch (err) {
-    console.log("Payment API error, fallback to confirmation");
-  }
+    alert("Payment failed");
 
-  // 🔥 FALLBACK (if no payment or testing)
-  window.location.href = "confirmation.html";
+  } catch (err) {
+    console.log(err);
+    alert("Error processing payment");
+  }
 }
