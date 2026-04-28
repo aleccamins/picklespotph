@@ -8,12 +8,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// 🔥 SERVE FRONTEND FILES
 app.use(express.static(path.join(__dirname, "public")));
 
 const DATA_FILE = "data.json";
-const PAYMONGO_SECRET = "sk_test_xxx"; // use TEST key first
+const PAYMONGO_SECRET = "sk_test_xxx"; // ⚠️ put your TEST key here
 
-// INIT
+// INIT DATA
 if (!fs.existsSync(DATA_FILE)) {
   fs.writeFileSync(DATA_FILE, JSON.stringify({ bookings: [] }, null, 2));
 }
@@ -26,7 +27,19 @@ function writeData(data) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
 }
 
-// CREATE PAYMENT
+//////////////////////////////////////////////////////
+// 🔥 IMPORTANT: LANDING PAGE FIX
+//////////////////////////////////////////////////////
+
+// 👉 This ensures index.html is shown
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+//////////////////////////////////////////////////////
+// PAYMONGO PAYMENT LINK
+//////////////////////////////////////////////////////
+
 app.post("/create-payment", async (req, res) => {
   const { name, date, time, duration, courtName } = req.body;
 
@@ -41,7 +54,11 @@ app.post("/create-payment", async (req, res) => {
             amount: amount * 100,
             description: "PickleSpotPH Booking",
             remarks: JSON.stringify({
-              name, date, time, duration, courtName
+              name,
+              date,
+              time,
+              duration,
+              courtName
             })
           }
         }
@@ -60,22 +77,32 @@ app.post("/create-payment", async (req, res) => {
     });
 
   } catch (err) {
-    console.log(err.response?.data);
-    res.status(500).send("Error");
+    console.log(err.response?.data || err.message);
+    res.status(500).send("Payment error");
   }
 });
 
-// 🔥 WEBHOOK (AUTO BOOKING)
+//////////////////////////////////////////////////////
+// BOOKINGS API
+//////////////////////////////////////////////////////
+
+app.get("/bookings", (req, res) => {
+  const data = readData();
+  res.json(data.bookings);
+});
+
+//////////////////////////////////////////////////////
+// 🔥 WEBHOOK (AUTO CREATE BOOKING AFTER PAYMENT)
+//////////////////////////////////////////////////////
+
 app.post("/webhook", (req, res) => {
   try {
     const event = req.body;
 
     if (event.data.attributes.type === "payment.paid") {
-      const remarks = event.data.attributes.data.attributes.description;
+      const paymentData = event.data.attributes.data.attributes;
 
-      const parsed = JSON.parse(
-        event.data.attributes.data.attributes.remarks
-      );
+      const parsed = JSON.parse(paymentData.remarks);
 
       const data = readData();
 
@@ -100,4 +127,9 @@ app.post("/webhook", (req, res) => {
   }
 });
 
-app.listen(5000, () => console.log("Server running"));
+//////////////////////////////////////////////////////
+// START SERVER
+//////////////////////////////////////////////////////
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log("Server running on port " + PORT));
