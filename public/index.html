@@ -8,57 +8,100 @@
     body {
       margin:0;
       font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background:#f4f6f9;
     }
 
     .hero {
-      background:linear-gradient(135deg,#3498db,#2ecc71);
-      color:white;
-      padding:40px 20px;
+      position:relative;
+      height:100vh;
+      background:url('images/cover.jpg') center/cover no-repeat;
+      display:flex;
+      align-items:center;
+      justify-content:center;
       text-align:center;
+      color:white;
     }
 
-    .hero h1 { margin:0; font-size:28px; }
-    .hero p { margin:10px 0; }
-
-    .cta-buttons {
-      margin-top:20px;
+    .overlay {
+      position:absolute;
+      width:100%;
+      height:100%;
+      background:linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.5));
     }
 
-    .cta-buttons button {
-      padding:12px 18px;
+    /* 🔥 GLASS CARD */
+    .glass {
+      position:relative;
+      z-index:2;
+      padding:25px;
+      border-radius:20px;
+
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+
+      max-width: 350px;
+    }
+
+    .logo {
+      width:100px;
+      border-radius:50%;
+      margin-bottom:10px;
+    }
+
+    h1 {
+      font-size:26px;
+      margin:0;
+      text-shadow:0 3px 10px rgba(0,0,0,0.8);
+    }
+
+    p {
+      margin:10px 0 20px;
+      font-size:14px;
+      text-shadow:0 2px 8px rgba(0,0,0,0.8);
+    }
+
+    .buttons button {
+      padding:12px;
+      margin:5px;
       border:none;
       border-radius:10px;
-      margin:5px;
       font-weight:bold;
       cursor:pointer;
+      width:100%;
     }
 
-    .book-btn { background:white; color:#3498db; }
-    .login-btn { background:#2ecc71; color:white; }
+    .book-btn {
+      background:#2ecc71;
+      color:white;
+    }
 
-    .container {
+    .owner-btn {
+      background:#3498db;
+      color:white;
+    }
+
+    /* COURTS */
+    .section {
+      padding:20px;
+      background:#f4f6f9;
       max-width:420px;
       margin:auto;
-      padding:15px;
-    }
-
-    .section-title {
-      font-weight:bold;
-      margin-bottom:10px;
     }
 
     .court-card {
       background:white;
       border-radius:12px;
-      overflow:hidden;
       margin-bottom:15px;
+      overflow:hidden;
       box-shadow:0 8px 20px rgba(0,0,0,0.05);
     }
 
     .court-img {
       width:100%;
-      height:140px;
+      height:120px;
       object-fit:cover;
     }
 
@@ -81,12 +124,6 @@
       margin-top:5px;
     }
 
-    .slots {
-      font-size:12px;
-      margin-top:6px;
-      color:#555;
-    }
-
     .card-btn {
       margin-top:10px;
       width:100%;
@@ -97,33 +134,31 @@
       color:white;
       font-weight:bold;
     }
-
-    .owner {
-      background:#2ecc71;
-      margin-top:10px;
-    }
   </style>
 </head>
 
 <body>
 
-<!-- HERO -->
 <div class="hero">
-  <h1>PickleSpotPH</h1>
-  <p>Book pickleball courts instantly</p>
+  <div class="overlay"></div>
 
-  <div class="cta-buttons">
-    <button class="book-btn" onclick="goPlayer()">🏓 Book Now</button>
-    <button class="login-btn" onclick="goOwner()">Owner Login</button>
+  <!-- 🔥 GLASS BOX -->
+  <div class="glass">
+    <img src="images/logo.jpg" class="logo">
+
+    <h1>Book Courts. Play Anytime.</h1>
+    <p>The easiest way to play pickleball in the Philippines 🇵🇭</p>
+
+    <div class="buttons">
+      <button class="book-btn" onclick="goPlayer()">🏓 Book Now</button>
+      <button class="owner-btn" onclick="goOwner()">Owner Login</button>
+    </div>
   </div>
 </div>
 
-<div class="container">
-
-  <div class="section-title">Available Courts Today</div>
-
+<div class="section">
+  <h3>Available Courts Today</h3>
   <div id="courts"></div>
-
 </div>
 
 <script>
@@ -140,41 +175,25 @@ async function loadCourts() {
   const today = new Date().toISOString().split("T")[0];
 
   courts.forEach(court => {
-
     const todayBookings = bookings.filter(b =>
       b.date === today &&
       b.courtName === court.name &&
       (b.status === "Paid" || b.status === "Approved")
     );
 
-    const taken = todayBookings.map(b => b.time);
-
-    const allSlots = [
-      "8:00 AM","9:00 AM","10:00 AM",
-      "11:00 AM","12:00 PM","1:00 PM",
-      "2:00 PM","3:00 PM","4:00 PM",
-      "5:00 PM","6:00 PM","7:00 PM"
-    ];
-
-    const available = allSlots.filter(t => !taken.includes(t));
-    const preview = available.slice(0,3).join(", ") || "Fully booked";
+    const available = 12 - todayBookings.length;
 
     const card = document.createElement("div");
     card.className = "court-card";
 
     card.innerHTML = `
-      <img class="court-img" src="https://images.unsplash.com/photo-1616627981686-8a1c4a0b6c8f?auto=format&fit=crop&w=800&q=60">
-
+      <img class="court-img" src="images/cover.jpg">
       <div class="content">
-        <div><b>${court.name}</b></div>
+        <b>${court.name}</b><br>
         <div class="price">₱${court.price}/hr</div>
 
         <div class="badge">
-          ${available.length ? "Available Today" : "Fully Booked"}
-        </div>
-
-        <div class="slots">
-          Next slots: ${preview}
+          ${available > 0 ? available + " slots available" : "Fully booked"}
         </div>
 
         <button class="card-btn" onclick="book('${court.name}')">
