@@ -59,12 +59,13 @@
 
     .details {
       background:rgba(255,255,255,0.1);
-      padding:10px;
+      padding:12px;
       border-radius:10px;
       margin-top:15px;
       color:white;
       font-size:13px;
       text-align:left;
+      line-height:1.6;
     }
 
     button {
@@ -76,6 +77,13 @@
       background:#2ecc71;
       color:white;
       font-weight:bold;
+      cursor:pointer;
+    }
+
+    .loading {
+      color:#ccc;
+      margin-top:10px;
+      font-size:13px;
     }
   </style>
 </head>
@@ -91,27 +99,59 @@
     <h2>✅ Booking Confirmed</h2>
     <p>Your court has been successfully reserved.</p>
 
-    <div class="details" id="details"></div>
+    <div id="details" class="details">Loading booking...</div>
+    <div id="status" class="loading"></div>
 
     <button onclick="goHome()">Back to Home</button>
   </div>
 </div>
 
 <script>
-const booking = JSON.parse(localStorage.getItem("lastBooking"));
+const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
 
-if (booking) {
-  document.getElementById("details").innerHTML = `
-    <b>Court:</b> ${booking.court}<br>
-    <b>Date:</b> ${booking.date}<br>
-    <b>Time:</b> ${booking.time}<br>
-    <b>Duration:</b> ${booking.duration} hour(s)
-  `;
+let attempts = 0;
+
+function fetchBooking() {
+  if (!ref) {
+    document.getElementById("details").innerHTML = "Invalid booking reference.";
+    return;
+  }
+
+  fetch("/booking/" + ref)
+    .then(res => {
+      if (!res.ok) throw new Error("Not ready");
+      return res.json();
+    })
+    .then(b => {
+      document.getElementById("details").innerHTML = `
+        <b>Reference:</b> ${b.ref}<br>
+        <b>Court:</b> ${b.courtName}<br>
+        <b>Date:</b> ${b.date}<br>
+        <b>Time:</b> ${b.time}<br>
+        <b>Duration:</b> ${b.duration} hour(s)
+      `;
+      document.getElementById("status").innerHTML = "";
+    })
+    .catch(() => {
+      attempts++;
+
+      if (attempts < 10) {
+        document.getElementById("status").innerHTML =
+          "Confirming your booking... (" + attempts + ")";
+        setTimeout(fetchBooking, 1500);
+      } else {
+        document.getElementById("status").innerHTML =
+          "Please refresh if booking does not appear.";
+      }
+    });
 }
 
 function goHome() {
   window.location.href = "index.html";
 }
+
+fetchBooking();
 </script>
 
 </body>
