@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+  <title>Select Role</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
@@ -19,50 +19,40 @@
       padding:25px;
       border-radius:10px;
       width:300px;
-    }
-
-    input {
-      width:100%;
-      padding:10px;
-      margin-bottom:10px;
-      border-radius:6px;
-      border:1px solid #ccc;
+      text-align:center;
     }
 
     button {
       width:100%;
       padding:12px;
+      margin-top:10px;
       border:none;
       border-radius:8px;
-      background:#2ecc71;
       color:white;
       font-weight:bold;
     }
+
+    .player { background:#2ecc71; }
+    .owner { background:#3498db; }
   </style>
 </head>
 
 <body>
 
 <div class="box">
-  <h3>Login</h3>
+  <h3>Select Role</h3>
 
-  <input id="email" placeholder="Enter your email">
-
-  <button onclick="login()">Continue</button>
+  <button class="player" onclick="goPlayer()">I am a Player</button>
+  <button class="owner" onclick="goOwner()">I am an Owner</button>
 </div>
 
 <script>
-function login() {
-  const email = document.getElementById("email").value;
+function goPlayer() {
+  window.location.href = "player.html";
+}
 
-  if (!email) {
-    alert("Enter email");
-    return;
-  }
-
-  localStorage.setItem("userEmail", email);
-
-  window.location.href = "role.html";
+function goOwner() {
+  window.location.href = "owner.html";
 }
 </script>
 
