@@ -66,7 +66,11 @@ async function pay() {
       date,
       time: selectedTime,
       duration,
-      courtName: "Default Court"
+      const selectedCourt = localStorage.getItem("selectedCourt") || "Default Court";
+
+...
+
+courtName: selectedCourt
     })
   });
 

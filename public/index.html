@@ -6,121 +6,178 @@
 
   <style>
     body {
-      margin: 0;
+      margin:0;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
-      background: #f4f6f9;
+      background:#f4f6f9;
     }
 
     .hero {
-      background: linear-gradient(135deg, #3498db, #2ecc71);
-      color: white;
-      padding: 40px 20px;
-      text-align: center;
+      background: linear-gradient(135deg,#3498db,#2ecc71);
+      color:white;
+      padding:30px 20px;
+      text-align:center;
     }
 
-    .hero h1 {
-      margin: 0;
-      font-size: 26px;
-    }
-
-    .hero p {
-      margin-top: 10px;
-      font-size: 14px;
-      opacity: 0.9;
-    }
+    .hero h1 { margin:0; }
+    .hero p { margin-top:8px; font-size:14px; }
 
     .container {
-      max-width: 420px;
-      margin: auto;
-      padding: 20px;
+      max-width:420px;
+      margin:auto;
+      padding:15px;
     }
 
-    .card {
-      background: white;
-      padding: 18px;
-      border-radius: 12px;
-      margin-bottom: 15px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-      text-align: center;
+    .court-card {
+      background:white;
+      border-radius:12px;
+      overflow:hidden;
+      margin-bottom:15px;
+      box-shadow:0 8px 20px rgba(0,0,0,0.05);
     }
 
-    .card h3 {
-      margin: 10px 0 5px;
+    .court-img {
+      width:100%;
+      height:150px;
+      object-fit:cover;
     }
 
-    .card p {
-      font-size: 13px;
-      color: #555;
-      margin-bottom: 15px;
+    .content {
+      padding:12px;
+    }
+
+    .title {
+      font-weight:bold;
+      font-size:16px;
+    }
+
+    .price {
+      color:#2ecc71;
+      font-weight:bold;
+      margin-top:3px;
+    }
+
+    .badge {
+      display:inline-block;
+      background:#eafaf1;
+      color:#27ae60;
+      padding:4px 8px;
+      border-radius:6px;
+      font-size:11px;
+      margin-top:6px;
+    }
+
+    .slots {
+      margin-top:10px;
+      font-size:12px;
+      color:#555;
+    }
+
+    .cta {
+      margin-top:10px;
     }
 
     button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: bold;
-      cursor: pointer;
+      width:100%;
+      padding:10px;
+      border:none;
+      border-radius:8px;
+      background:#3498db;
+      color:white;
+      font-weight:bold;
     }
 
-    .primary {
-      background: #3498db;
-      color: white;
-    }
-
-    .secondary {
-      background: #2ecc71;
-      color: white;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 12px;
-      color: #777;
-      margin-top: 20px;
+    .owner-btn {
+      margin-top:15px;
+      background:#2ecc71;
     }
   </style>
 </head>
 
 <body>
 
-<!-- HERO -->
 <div class="hero">
   <h1>PickleSpotPH</h1>
-  <p>Book your pickleball court in seconds</p>
+  <p>Find & book pickleball courts instantly</p>
 </div>
 
+<div class="container" id="courts"></div>
+
 <div class="container">
-
-  <!-- PLAYER -->
-  <div class="card">
-    <h3>🏓 Book a Court</h3>
-    <p>Reserve your slot quickly and pay securely</p>
-    <button class="primary" onclick="goPlayer()">Start Booking</button>
-  </div>
-
-  <!-- OWNER -->
-  <div class="card">
-    <h3>🏢 Court Owner</h3>
-    <p>Manage bookings and track earnings</p>
-    <button class="secondary" onclick="goOwner()">Owner Dashboard</button>
-  </div>
-
-  <div class="footer">
-    © 2026 PickleSpotPH
-  </div>
-
+  <button class="owner-btn" onclick="goOwner()">Owner Dashboard</button>
 </div>
 
 <script>
-function goPlayer() {
+async function loadCourts() {
+  const res = await fetch("/courts");
+  const courts = await res.json();
+
+  const bookingsRes = await fetch("/bookings");
+  const bookings = await bookingsRes.json();
+
+  const container = document.getElementById("courts");
+  container.innerHTML = "";
+
+  const today = new Date().toISOString().split("T")[0];
+
+  courts.forEach(court => {
+
+    const todayBookings = bookings.filter(b =>
+      b.date === today &&
+      b.courtName === court.name &&
+      b.status === "Paid"
+    );
+
+    const takenTimes = todayBookings.map(b => b.time);
+
+    const allSlots = [
+      "8:00 AM","9:00 AM","10:00 AM",
+      "11:00 AM","12:00 PM","1:00 PM",
+      "2:00 PM","3:00 PM","4:00 PM",
+      "5:00 PM","6:00 PM","7:00 PM"
+    ];
+
+    const available = allSlots.filter(t => !takenTimes.includes(t));
+
+    const previewSlots = available.slice(0,3).join(", ") || "Fully booked";
+
+    const card = document.createElement("div");
+    card.className = "court-card";
+
+    card.innerHTML = `
+      <img class="court-img" src="https://images.unsplash.com/photo-1616627981686-8a1c4a0b6c8f?auto=format&fit=crop&w=800&q=60">
+
+      <div class="content">
+        <div class="title">${court.name}</div>
+        <div class="price">₱${court.price}/hr</div>
+
+        <div class="badge">
+          ${available.length > 0 ? "Available Today" : "Fully Booked"}
+        </div>
+
+        <div class="slots">
+          Next slots: ${previewSlots}
+        </div>
+
+        <div class="cta">
+          <button onclick="book('${court.name}')">Book Now</button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function book(courtName) {
+  localStorage.setItem("selectedCourt", courtName);
   window.location.href = "player.html";
 }
 
 function goOwner() {
   window.location.href = "owner.html";
 }
+
+loadCourts();
 </script>
 
 </body>
