@@ -1,87 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Receipt</title>
+  <title>Owner Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial;
-      background:#f4f6f9;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      margin:0;
-    }
+    body { font-family:Arial; background:#f4f6f9; margin:0; padding:20px; }
 
-    .box {
+    .container { max-width:420px; margin:auto; }
+
+    .card {
       background:white;
-      padding:25px;
-      border-radius:12px;
-      width:320px;
-    }
-
-    h2 {
-      text-align:center;
-      margin-bottom:15px;
-    }
-
-    .line {
-      display:flex;
-      justify-content:space-between;
-      margin:5px 0;
-    }
-
-    .total {
-      font-size:18px;
-      font-weight:bold;
-      color:#2ecc71;
-      margin-top:10px;
+      padding:15px;
+      border-radius:10px;
+      margin-bottom:10px;
     }
 
     button {
-      width:100%;
-      padding:12px;
-      margin-top:15px;
+      margin-top:8px;
+      padding:8px;
       border:none;
-      border-radius:8px;
-      background:#3498db;
+      border-radius:6px;
       color:white;
     }
+
+    .approve { background:#2ecc71; }
+    .reject { background:#e74c3c; }
   </style>
 </head>
 
 <body>
 
-<div class="box">
-
-  <h2>🧾 Receipt</h2>
-
-  <div id="details"></div>
-
-  <div class="total" id="total"></div>
-
-  <button onclick="back()">Back</button>
-
+<div class="container">
+  <h2>Owner Dashboard</h2>
+  <div id="list"></div>
 </div>
 
-<script>
-const data = JSON.parse(localStorage.getItem("receipt"));
-
-document.getElementById("details").innerHTML = `
-  <div class="line"><span>Name:</span><span>${data.name}</span></div>
-  <div class="line"><span>Date:</span><span>${data.date}</span></div>
-  <div class="line"><span>Time:</span><span>${data.time}</span></div>
-  <div class="line"><span>Duration:</span><span>${data.duration} hr</span></div>
-`;
-
-document.getElementById("total").innerText = "Total: ₱" + data.total;
-
-function back() {
-  window.location.href = "player.html";
-}
-</script>
-
+<script src="owner.js"></script>
 </body>
 </html>
